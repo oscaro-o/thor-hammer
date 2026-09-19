@@ -39,12 +39,25 @@ start index.html           # Windows
 
 It works offline. There is no analytics, no tracking, no external request of any kind.
 
+## Live
+
+| Where | URL |
+|---|---|
+| GitHub repo | https://github.com/oscaro-o/thor-hammer |
+| GitHub Pages (permanent backup) | https://oscaro-o.github.io/thor-hammer/ |
+| VPS (Trilumi server) | https://hetu.trilumi.xyz/hammer/ |
+
+Both serve the same file. The Pages copy survives any server work; the VPS copy
+is the one to move to a proper subdomain later.
+
 ## Files
 
 | File | Purpose |
 |---|---|
 | `index.html` | The entire game. This is the deployable artifact. |
-| `og.html` | Tool page — renders and downloads `og.png` (the 1200×630 social preview image). |
+| `og.png` | 1200×630 social preview image. |
+| `og.html` | Browser tool that regenerates `og.png`. |
+| `tools/make-og.py` | Terminal version of the same thing (needs Pillow). |
 | `deploy.sh` | One-command deploy to the VPS. |
 | `.github/workflows/deploy.yml` | Auto-deploy on push to `main`. |
 
@@ -53,11 +66,12 @@ It works offline. There is no analytics, no tracking, no external request of any
 ### Option A — from your machine
 
 ```bash
-./deploy.sh                      # uses the default target below
+./deploy.sh                      # deploys to /home/hetu.trilumi.xyz/public_html/hammer
 ./deploy.sh /some/other/path     # or override it
 ```
 
-It tars the site over SSH and unpacks it on the server. Requires the `hetu` host alias in
+It tars the site over SSH and unpacks it on the server, then fixes ownership and
+prints the HTTP status of the live URL. Requires the `hetu` host alias in
 `~/.ssh/config` and `~/.ssh/hetu_deploy`.
 
 ### Option B — automatically on every push
@@ -69,24 +83,27 @@ Add these four repository secrets (**Settings → Secrets and variables → Acti
 | `SSH_HOST` | `212.85.27.147` |
 | `SSH_USER` | `root` |
 | `SSH_PRIVATE_KEY` | contents of `~/.ssh/hetu_deploy` (the **private** key) |
-| `DEPLOY_PATH` | absolute path to the web root on the server |
+| `DEPLOY_PATH` | `/home/hetu.trilumi.xyz/public_html/hammer` |
 
-Then every push to `main` deploys. You can also trigger it by hand from the Actions tab.
+Then every push to `main` deploys. You can also trigger it by hand from the Actions
+tab. The workflow fails loudly with a list of missing secrets if any are unset, so
+it can never half-deploy.
 
-> The private key goes into GitHub Secrets, which are encrypted and never exposed to
+> The private key goes into GitHub Secrets, which are encrypted and never printed to
 > workflow logs — but they *are* readable by anyone with admin rights on the repo.
-> If you'd rather not, use Option A and skip the workflow.
+> If you'd rather not, use Option A and delete the workflow file.
 
-## One thing left to do
+## Moving it to a proper domain
 
-`og:image` and `twitter:image` in `index.html` currently point at a **relative** `og.png`.
-Most social platforms require an **absolute** URL. Once the domain is settled:
+`hetu.trilumi.xyz/hammer/` is a sandbox path, chosen because it touches nothing
+that already exists. When you want a real home:
 
-1. Open `og.html`, click the button, save the file as `og.png` in this folder
-2. Commit it
-3. Change both meta tags to `https://<your-domain>/og.png`
-
-Until then, shared links will show a plain text card instead of an image.
+1. CyberPanel → **Websites → Create Website**, domain e.g. `hammer.trilumi.xyz`
+2. Point the DNS A record at `212.85.27.147`
+3. CyberPanel → **SSL → Issue SSL**
+4. `./deploy.sh /home/hammer.trilumi.xyz/public_html`
+5. Update the `og:image` / `twitter:image` meta tags in `index.html` to the new
+   absolute URL, and the `DEPLOY_PATH` secret if you use Option B.
 
 ## A note on the metaphor
 

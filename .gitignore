@@ -11,3 +11,6 @@ desktop.ini
 # local scratch
 *.log
 tmp/
+
+# deploy.sh scratch
+.deploy-check.tmp
