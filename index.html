@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Everyone Got Thor's Hammer — a game about the price of skill</title>
+<meta name="description" content="One morning, everyone on earth woke up holding Thor's hammer. A short game about what is still worth paying for once execution becomes free. Six decisions, three languages, one question.">
+<meta name="theme-color" content="#f7f4ef">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23191713'/%3E%3Crect x='12' y='11' width='15' height='34' rx='4' fill='%23a8542a'/%3E%3Crect x='25' y='23' width='29' height='9' rx='4' fill='%23f7f4ef'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Everyone Got Thor's Hammer">
+<meta property="og:title" content="Everyone Got Thor's Hammer">
+<meta property="og:description" content="One morning, everyone on earth woke up holding Thor's hammer. A short game about what is still worth paying for once execution becomes free.">
+<meta property="og:image" content="og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Everyone Got Thor's Hammer">
+<meta name="twitter:description" content="One morning, everyone on earth woke up holding Thor's hammer. A game about what is still worth paying for once execution becomes free.">
+<meta name="twitter:image" content="og.png">
+<style>
+:root{
+  --paper:#f7f4ef;
+  --card:#fffdfa;
+  --ink:#191713;
+  --ink2:#4c463d;
+  --ink3:#8c8478;
+  --line:#e2dbcf;
+  --accent:#a8542a;
+  --cash:#b08420;
+  --stand:#2f6076;
+  --reach:#7a3f66;
+  --time:#4a7a55;
+  --exec:#b0452a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding:26px 18px 90px;
+  line-height:1.5;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 12% 6%, rgba(120,90,40,.05), transparent 55%),
+    radial-gradient(circle at 88% 82%, rgba(60,80,110,.05), transparent 55%);
+}
+.wrap{max-width:840px;margin:0 auto;position:relative;z-index:2}
+
+/* ---------- HUD ---------- */
+.hud{
+  display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  border:1px solid var(--line);background:var(--card);
+  padding:13px 18px;border-radius:3px;margin-bottom:16px;
+}
+.hud.hide{display:none}
+.meters{display:flex;gap:20px;flex-wrap:wrap}
+.meter{min-width:92px}
+.meter .lbl{
+  font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);
+  display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-weight:600;
+}
+.meter .lbl b{color:var(--ink2);font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:4px;background:#ece5d9;border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.exec{flex:1 1 220px;min-width:190px}
+.exec .lbl,.exec .lbl b{color:var(--exec)}
+.exec .bar{height:5px}
+.hudright{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.dots{display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:#e2dbcf;transition:.3s}
+.dot.on{background:var(--ink);transform:scale(1.15)}
+.dot.cur{background:var(--accent);transform:scale(1.4)}
+.rst{
+  border:1px solid var(--line);background:transparent;color:var(--ink3);
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  padding:6px 10px;border-radius:2px;cursor:pointer;font-family:inherit;transition:.18s;
+}
+.rst:hover{border-color:var(--ink);color:var(--ink)}
+.langs{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.langs button{
+  border:0;border-right:1px solid var(--line);background:transparent;color:var(--ink3);
+  font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.06em;
+  padding:6px 10px;cursor:pointer;transition:.18s;white-space:nowrap;
+}
+.langs button:last-child{border-right:0}
+.langs button:hover{background:#f3efe8;color:var(--ink)}
+.langs button.active{background:var(--ink);color:#fff}
+
+/* ---------- CARD ---------- */
+.card{
+  border:1px solid var(--line);background:var(--card);border-radius:3px;
+  padding:40px 46px 44px;
+  box-shadow:0 1px 0 rgba(0,0,0,.02), 0 22px 46px -34px rgba(30,20,10,.45);
+  animation:rise .55s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.kicker{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
+  margin-bottom:16px;font-weight:700;
+}
+h1{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;font-size:clamp(32px,6vw,48px);line-height:1.08;letter-spacing:-.02em;margin-bottom:14px}
+h2{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;font-size:clamp(23px,4vw,30px);line-height:1.18;letter-spacing:-.015em;margin-bottom:24px}
+.lede{font-family:Georgia,serif;font-size:17px;line-height:1.75;color:var(--ink2);margin-bottom:14px}
+.prose p{font-family:Georgia,"Iowan Old Style",serif;font-size:16.5px;line-height:1.82;color:var(--ink2);margin-bottom:17px}
+.prose p:last-child{margin-bottom:0}
+.prose em{color:var(--ink);font-style:italic}
+.rule{height:1px;background:var(--line);margin:30px 0 26px}
+.prompt{
+  margin:28px 0 20px;padding:2px 0 2px 18px;border-left:2px solid var(--accent);
+  font-size:15.5px;font-weight:600;color:var(--ink);line-height:1.65;
+}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{
+  text-align:left;border:1px solid var(--line);background:#fff;border-radius:3px;
+  padding:15px 18px;font-size:14.5px;line-height:1.55;color:var(--ink2);
+  cursor:pointer;transition:.18s ease;display:flex;gap:14px;align-items:flex-start;
+  font-family:inherit;width:100%;
+}
+.opt:hover{border-color:var(--ink);background:#fdfbf7;transform:translateX(3px)}
+.opt .n{
+  font-size:11px;font-weight:700;color:var(--ink3);border:1px solid var(--line);
+  border-radius:2px;width:21px;height:21px;display:grid;place-items:center;flex:none;margin-top:1px;
+  transition:.18s;
+}
+.opt:hover .n{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- OUTCOME ---------- */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 4px}
+.chip{
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  padding:6px 10px;border-radius:2px;border:1px solid var(--line);color:var(--ink2);
+  animation:fade .5s ease both;
+}
+.chip.up{color:#7a5a12;border-color:#e6d7ae;background:#fdf8ea}
+.chip.dn{color:#8d5a52;border-color:#e8d3ce;background:#fdf2ef}
+.lesson{
+  margin-top:28px;border:1px solid var(--line);border-left:3px solid var(--accent);
+  background:#fbf8f3;padding:20px 22px;border-radius:2px;
+}
+.lesson .tag{
+  font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:10px;
+}
+.lesson p{font-family:Georgia,serif;font-size:16px;line-height:1.75;color:var(--ink)}
+
+/* ---------- BUTTONS ---------- */
+.acts{display:flex;gap:10px;margin-top:28px;flex-wrap:wrap;align-items:center}
+.btn{
+  border:1px solid var(--ink);background:var(--ink);color:#fff;
+  font-family:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  padding:13px 26px;border-radius:2px;cursor:pointer;transition:.18s;
+}
+.btn:hover{background:#000;transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink2);border-color:var(--line)}
+.btn.ghost:hover{background:#f3efe8;color:var(--ink);border-color:var(--ink)}
+.hint{font-size:11px;color:var(--ink3);letter-spacing:.03em}
+
+/* ---------- TITLE ---------- */
+.toolart{margin:6px 0 30px}
+.toolart svg{display:block;width:100%;max-width:420px;height:auto}
+.stamp{
+  display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);
+  padding:7px 12px;border-radius:2px;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:26px;
+}
+.stamp i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:block}
+
+/* ---------- ENDING ---------- */
+.rank{
+  border:1px solid var(--line);background:#fbf8f3;border-radius:3px;
+  padding:28px 30px;margin-bottom:26px;
+}
+.rank .rt{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:12px}
+.rank h3{font-family:Georgia,serif;font-size:28px;letter-spacing:-.015em;margin-bottom:12px}
+.rank p{font-family:Georgia,serif;font-size:16px;line-height:1.75;color:var(--ink2)}
+.scoregrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:12px;margin-bottom:26px}
+.sg{border:1px solid var(--line);border-radius:2px;padding:14px 16px;background:#fff}
+.sg .k{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:7px}
+.sg .v{font-family:Georgia,serif;font-size:26px;font-variant-numeric:tabular-nums}
+.recap{list-style:none;counter-reset:r}
+.recap li{
+  counter-increment:r;position:relative;padding-left:44px;margin-bottom:20px;
+  font-family:Georgia,serif;font-size:15.5px;line-height:1.7;color:var(--ink2);
+}
+.recap li::before{
+  content:counter(r,decimal-leading-zero);position:absolute;left:0;top:2px;
+  font-family:"Segoe UI",sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;
+  color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:3px;
+}
+.recap li b{color:var(--ink);font-weight:600}
+.closing{
+  border:1px solid var(--ink);background:var(--ink);color:#f2ece2;
+  border-radius:3px;padding:34px 36px;margin-top:32px;
+}
+.closing .tag{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:#c9a884;font-weight:700;margin-bottom:18px}
+.closing p{font-family:Georgia,serif;font-size:16.5px;line-height:1.85;color:#ddd5c8;margin-bottom:16px}
+.closing p:last-child{margin-bottom:0}
+.closing strong{color:#fff;font-weight:600}
+.closing .q{
+  margin-top:24px;padding-top:22px;border-top:1px solid #3a352d;
+  font-family:Georgia,serif;font-size:19px;line-height:1.6;color:#fff;font-style:italic;
+}
+/* ---------- SHARE MODAL ---------- */
+.modal{
+  position:fixed;inset:0;z-index:60;display:none;
+  background:rgba(25,23,19,.74);
+  align-items:flex-start;justify-content:center;
+  padding:26px 16px 40px;overflow:auto;
+  animation:fade .22s ease both;
+}
+.modal.open{display:flex}
+.sheet{
+  background:var(--card);border:1px solid var(--line);border-radius:3px;
+  width:100%;max-width:462px;padding:22px 22px 20px;
+  box-shadow:0 34px 90px -44px rgba(0,0,0,.85);
+  animation:rise .34s cubic-bezier(.2,.8,.2,1) both;
+}
+.sheet h3{font-family:Georgia,"Iowan Old Style",serif;font-size:19px;letter-spacing:-.01em;margin-bottom:7px}
+.sheet .sub{font-size:12.5px;line-height:1.55;color:var(--ink3);margin-bottom:16px}
+.sheet canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:2px;background:#f7f4ef}
+.sheetacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.sheetacts .btn{flex:1 1 44%;text-align:center;padding:12px 14px;font-size:11px;letter-spacing:.1em}
+.sheetacts .btn.wide{flex-basis:100%;background:transparent;color:var(--ink3);border-color:var(--line)}
+.sheetacts .btn.wide:hover{background:#f3efe8;color:var(--ink);border-color:var(--ink)}
+.toast{
+  position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+  background:var(--ink);color:#fff;font-size:12.5px;letter-spacing:.04em;font-weight:600;
+  padding:11px 20px;border-radius:2px;z-index:70;
+  animation:fade .2s ease both;box-shadow:0 16px 40px -18px rgba(0,0,0,.7);
+}
+@media(max-width:600px){
+  .card{padding:30px 22px 34px}
+  .meters{gap:13px}
+  .meter{min-width:70px}
+  .meter .lbl{font-size:9px}
+  body{padding:16px 12px 70px}
+  .hud{gap:12px;padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud" id="hud"></div>
+  <div id="stage"></div>
+</div>
+
+<script>
+/* ==========================================================================
+   EVERYONE GOT A CHISEL
+   A short narrative game about what is still worth paying for
+   once execution becomes free.
+   Languages: English / 简体中文 / 繁體中文
+   ========================================================================== */
+
+/* ---- shared mechanics: never duplicated per language ---- */
+const FX = [
+  [ {cash:-9, standing:6,  reach:-3, time:0},  {cash:14, standing:-2, reach:8,  time:6},
+    {cash:11, standing:5,  reach:4,  time:-4}, {cash:12, standing:4,  reach:3,  time:0} ],
+  [ {cash:14, standing:0,  reach:4,  time:0},  {cash:7,  standing:6,  reach:20, time:0},
+    {cash:20, standing:-4, reach:-3, time:3},  {cash:12, standing:8,  reach:14, time:-2} ],
+  [ {cash:-7, standing:-5, reach:-12,time:0},  {cash:13, standing:8,  reach:3,  time:5},
+    {cash:6,  standing:13, reach:16, time:0},  {cash:10, standing:5,  reach:9,  time:-2} ],
+  [ {cash:-5, standing:-5, reach:3,  time:-7}, {cash:17, standing:8,  reach:10, time:9},
+    {cash:13, standing:6,  reach:16, time:7},  {cash:2,  standing:6,  reach:-8, time:-9} ],
+  [ {cash:7,  standing:-5, reach:-8, time:0},  {cash:3,  standing:8,  reach:18, time:0},
+    {cash:11, standing:1,  reach:12, time:-5}, {cash:9,  standing:11, reach:14, time:0} ],
+  [ {cash:14, standing:2,  reach:5,  time:0},  {cash:6,  standing:-7, reach:5,  time:2},
+    {cash:23, standing:13, reach:24, time:5},  {cash:12, standing:6,  reach:16, time:0} ]
+];
+const RANK_MIN = [300, 240, 175, 0];
+const EXEC_CURVE = [100, 78, 52, 30, 14, 5, 3];
+const START = { cash: 40, standing: 45, reach: 5, time: 45 };
+
+/* ==========================================================================
+   TEXT
+   ========================================================================== */
+const T = {
+
+/* ------------------------------- ENGLISH ------------------------------- */
+en: {
+  docTitle: "Everyone Got Thor's Hammer",
+  ui: {
+    stamp: "A short game about the price of skill",
+    lede: "One morning, every person on earth woke up holding Thor's hammer.",
+    p1: "A week's work, finished before lunch. The hammer never slips and never dulls — every strike lands exactly where you meant it to. Nothing you can make is scarce any more.",
+    p2: "This is the story of a carver with twenty years in his hands — and what he learns to sell once his hands stop being the point.",
+    begin: "Begin",
+    beginHint: "Six chapters. Your choices move the numbers at the top.",
+    cash: "Cash", standing: "Standing", reach: "Reach", time: "Free time",
+    exec: `Market price of "can you make it?"`,
+    restart: "Restart",
+    outcomeSuffix: "outcome",
+    lessonTag: "What just happened",
+    next: "Continue", last: "See how it ends",
+    nextHint: "Your judgement, not your hands.",
+    epilogue: "Epilogue",
+    endTitle: "What the hammer left behind",
+    finishedAs: "You finished as",
+    lessonHeader: "Your six decisions, and what each one taught",
+    pointTag: "The point",
+    again: "Play again", replay: "Replay a chapter",
+    share: "Share result",
+    shareTitle: "Your card",
+    shareHint: "Long-press the image to save it, or download it below. Then post it anywhere.",
+    download: "Download PNG",
+    copyText: "Copy as text",
+    shareNative: "Share",
+    close: "Close",
+    copied: "Copied to clipboard",
+    copyFail: "Copy failed — select the text manually.",
+    cardFooter: "Six decisions. One question. Play it yourself."
+  },
+  ranks: [
+    { name: "The Eye", text: "You stopped pricing your time and started pricing your judgement, multiplied by everyone who will ever use it. You did not get better at carving. You found out what you were actually selling." },
+    { name: "The Editor", text: "You learned that the scarce thing is the decision, not the making. You sell looking, checking and judging — and that scales far beyond your own two hands." },
+    { name: "The Craftsman", text: "You survived by moving up. Better clients, better work, less of the bottom. Solid — and still tied to your own hands." },
+    { name: "The Piece Worker", text: "You kept selling hours in a world where hours became free. The hammer was very good to you, and you were paid accordingly. Once." }
+  ],
+  end: {
+    p1: "The last thing the carver did was not send a price. He asked a question — how many people will use this? — and in asking it he changed what he was selling. Not his hours. His judgement, multiplied by everyone who would ever run it.",
+    p2: "He never got better at carving. He got better at knowing what he was selling.",
+    c1: "<strong>Thor's hammer is AI.</strong> Everyone has one now. Making things — writing, drawing, coding, carving — stopped being scarce the moment a machine could do it before lunch.",
+    c2: "What is still scarce: knowing what to look at. Knowing when it is wrong. Knowing what to do when it breaks. And owning the map of your own judgement.",
+    c3: "The carver started the story being paid for his hands and ended it being paid for his eye. That was the only part of him the hammer could not copy.",
+    c4: "<strong>The hammer was never the asset. The eye was.</strong>",
+    q: "So: what is your hammer — and what does only your eye know?"
+  },
+  chapters: [
+    {
+      kicker: "01 / The Hammer", title: "A Week, Before Lunch",
+      scene: [
+        "On Tuesday morning you find the hammer lying on your workbench. You do not ask where it came from. Everyone has one now.",
+        "By noon you have finished an order that was meant to take a week. You photograph it and send the picture to <em>Rosa</em>, who runs the tavern on the corner.",
+        "She answers fast. <em>Beautiful. How much off for the three behind it?</em>",
+        "You have not decided how to reply when the group chat lights up: a rival carver's new price list. Forty percent under yours."
+      ],
+      prompt: "You do the arithmetic. There is still profit at a discount, and the hours you save will buy you more orders than you can take. What do you quote Rosa?",
+      options: [
+        {
+          label: "Hold your price. Twenty years is twenty years.",
+          outcome: ["Rosa says she will think about it. She does not order.",
+                    "Two weeks later the same three pieces appear outside her door. They are fine. Not good — fine. Nobody walking past can tell the difference."],
+          lesson: "Your skill did not get worse. It got invisible. When a machine can produce <b>fine</b>, fine stops being worth anything — and the people who cannot see the difference become the entire market."
+        },
+        {
+          label: "Cut thirty percent. You will still profit, and the saved hours buy more work.",
+          outcome: ["She pays a deposit before you finish typing.",
+                    "You are done by three. On the way home you stop at the market and buy fish that was swimming that morning. Twenty years of carving and you have rarely seen a weekday like this.",
+                    "It really is a good hammer."],
+          lesson: "This is the trap, and it does not feel like one. Output rises, income rises — but your price is now set by whoever owns the cheapest hammer, not by you. You are being paid for speed in a world where speed is free."
+        },
+        {
+          label: "Same price, but sell a package: five pieces, delivered and installed.",
+          outcome: ["She takes it without haggling.",
+                    "She was never buying stone. She was buying a thing outside her door that makes people stop walking."],
+          lesson: "You stopped selling carving and started selling an outcome. The hammer made the making cheap. It did not make <b>a thing that stops people on the street</b> cheap."
+        },
+        {
+          label: "Ask what the pieces are for before you name a number.",
+          outcome: ["The sign over her door is falling apart. The pieces are for the doorway.",
+                    "You quote against the doorway, not the stone. She does not blink."],
+          lesson: "Price is a function of what the work does, not how long it took. The hammer did not create that rule — it just made the rule impossible to ignore."
+        }
+      ]
+    },
+    {
+      kicker: "02 / The Company", title: "What Do You Look At?",
+      scene: [
+        "A company that builds companion systems for hammers comes to your shop. They are making a carving guide. The user uploads a photo and the system suggests the first strike. After each strike, another photo, another suggestion.",
+        "<em>We need to know what you are looking at before you strike.</em>",
+        "It is a better question than you expected. You look at a stone and you simply know. What you look at, exactly, takes a while to find.",
+        "They stay two weeks. They film you correcting your own work and ask why, every time. One afternoon an apprentice takes too much off a nose with one careless strike, and you pull the whole face back into proportion around the damage. Someone makes you say the whole thing again, slowly. They love that kind of thing — the apprentice will make that mistake forever, and the system needs to know what to say next.",
+        "You like the work. Someone sat down and listened to your hands. You bill two weeks. They pay the same day, and throw in a lifetime licence for the guide."
+      ],
+      prompt: "They are about to walk out with your judgement in their pocket. How did you write the contract?",
+      options: [
+        {
+          label: "Two weeks at your day rate. Simple, safe, done.",
+          outcome: ["Clean money.",
+                    "Then the guide ships — and a sentence you said on the eleventh day is in it, word for word. You watch a stranger in another country follow your instruction, and you get nothing from it.",
+                    "Not nothing. You got two weeks."],
+          lesson: "You were paid for your time. What you sold was your judgement — and judgement, once recorded, does not stop working when you do. A day rate cannot price something that gets copied for free."
+        },
+        {
+          label: "Day rate, plus a small royalty for every user of the guide.",
+          outcome: ["The room goes quiet. Someone asks if you are serious. You say yes, and they say they will get back to you.",
+                    "Three weeks later they do. A smaller royalty than you asked for — but a royalty."],
+          lesson: "This is the whole game in one clause. <b>Time is sold once. A method is sold every time someone uses it.</b> The hammer made your hands cheap — and it also made your method copyable, which means it can be licensed."
+        },
+        {
+          label: "A flat fee, and they own everything. Take the money and move on.",
+          outcome: ["The largest single payment you have ever received.",
+                    "For about a year it feels like a lot. Then you notice the guide has a million users, and the number they paid you starts to look like a rounding error."],
+          lesson: "Selling your method once, outright, is selling a field to buy a meal. It is a legitimate choice — as long as you know that is what you are doing."
+        },
+        {
+          label: "Day rate, plus your name on the guide and final say over how the advice is worded.",
+          outcome: ["They hesitate, then agree.",
+                    "Your name sits at the bottom of the guide. When they want to soften a warning to make it friendlier, you say no — and they keep it."],
+          lesson: "Two things are being built here: a product and a reputation. Only one of them compounds. Get your name attached to anything that carries your judgement."
+        }
+      ]
+    },
+    {
+      kicker: "03 / The Copy", title: "Good Enough After Two Drinks",
+      scene: [
+        "A month later Rosa sends a photo. It is a head, roughly. The ear is crooked and the hair looks like curled leaves. You zoom in before you notice the watermark in the corner — the guide's.",
+        "<em>Made it following your tutorial,</em> she says. <em>What do you think?</em>",
+        "You send back a few notes. The mouth matters most; she is close.",
+        "She video-calls you immediately and holds it up beside the bartender. He laughs once. Rosa turns the camera back to herself. <em>Fine. It goes outside tonight — after two drinks, everyone will know who it is.</em>",
+        "A few days later you see it on her feed, lit up, the crooked ear hidden in shadow, people posing next to it. Her caption: <em>Made by my own hands.</em> Other shop owners are asking what she charges."
+      ],
+      prompt: "Your client just became your competitor, and she is not even good. What do you do?",
+      options: [
+        {
+          label: "Stop teaching. Stop posting. Tighten up. Your method is your moat.",
+          outcome: ["You keep the method. You also keep it to yourself, in a room, while the rest of the street learns from each other without you.",
+                    "Six months on, nobody asks what you think any more."],
+          lesson: "You cannot gatekeep a method in a world where everyone owns a hammer. The information is already out. The only open question is whether your name is on it."
+        },
+        {
+          label: "Say nothing. Move upmarket. Her corner pieces were never your market.",
+          outcome: ["You take three commissions in a month from people who saw her post and wanted the real thing.",
+                    "The bottom of the market fell away, exactly as it should. You did not lose a customer. You lost a category."],
+          lesson: "The commodity tier was never your income. When it collapses, what remains is the top — and the top is suddenly visible to everyone who just learned the difference."
+        },
+        {
+          label: "Congratulate her publicly — and post your own piece next to it.",
+          outcome: ["You write something generous and mean it. Then you put your work beside hers.",
+                    "You do not say a word about which is which. Nobody needs you to."],
+          lesson: "Comparison is free advertising for whoever is better. Taste is the one thing the hammer cannot hand out."
+        },
+        {
+          label: "Offer to fix her pieces. A flat fee per head.",
+          outcome: ["She sends four. You spend twenty minutes on each.",
+                    "It is the easiest money you have made in years, and the first time you have been paid purely for looking."],
+          lesson: "You have just discovered a new product by accident: not making things, but correcting them. Remember this."
+        }
+      ]
+    },
+    {
+      kicker: "04 / The New Menu", title: "The Right Ear",
+      scene: [
+        "Your work changes shape.",
+        "Orders used to arrive whole: design, rough cut, finish. Now people send half-finished pieces and ask for only the hardest part. Others book thirty minutes to ask whether their plan is possible at all.",
+        "You write a new price list, line by line.",
+        "New clients come too. An old woman walks in with a phone and a photograph of a dog. She wants a small memorial. She asked the price years ago and never could afford it. This time she pays the deposit without hesitating, and asks only one thing, three times: the right ear should droop a little.",
+        "The shop holds more work than it ever has. You never did hire that second person. Some afternoons you are finished by four, sitting in the doorway with your phone, watching the world carve.",
+        "Some of it is rough enough to make your hands itch. Some of it is genuinely good. Most people finish one piece and immediately start another, for themselves. They will never walk into your shop. The hammer gave them a life you recognise — staring at a material, wondering what else you could make it do."
+      ],
+      prompt: "You are writing the new price list. What goes at the top?",
+      options: [
+        {
+          label: "Cheaper versions of everything. You are fast now — compete on price.",
+          outcome: ["You win every job for two months.",
+                    "In the third month you are undercut by someone who also owns a hammer and does not need to eat this month. You lower your price again.",
+                    "This is the whole game, and it has no end."],
+          lesson: "Speed is the one advantage the hammer gives to everybody. Competing on it is a race to zero, run at high speed."
+        },
+        {
+          label: "A menu of judgements: feasibility reads, rescue work, finishing, 'is this good enough?' reviews. Price the decision, not the hammer.",
+          outcome: ["It looks strange on paper and it works immediately.",
+                    "People pay more for twenty minutes of your attention than they ever paid for a week of your hands. The line items are short. They are all the same thing: you, looking."],
+          lesson: "When making becomes free, the billable unit changes. It stops being the hour and becomes the decision. <b>Unbundle your craft into the parts only you can do.</b>"
+        },
+        {
+          label: "A monthly retainer — ongoing access to your eye.",
+          outcome: ["Three shops sign up in the first month.",
+                    "It is not much per shop, but it arrives whether you work or not. It is the first money in twenty years that did not need you standing up."],
+          lesson: "Recurring revenue is what happens when you stop selling events and start selling a standing relationship. It is the difference between a wage and an asset."
+        },
+        {
+          label: "Full commissions only. You are not a repair shop.",
+          outcome: ["The work that comes is excellent, and there is less of it.",
+                    "You spend more time cutting rough stone than you have in years, and less time looking. You are very good at it.",
+                    "You also notice that you are tired."],
+          lesson: "Protecting your identity as <b>the maker</b> is comfortable. It also means spending your scarcest resource — your judgement — on the part of the job machines already do."
+        }
+      ]
+    },
+    {
+      kicker: "05 / Two Minutes", title: "The Checklist",
+      scene: [
+        "Rosa has opened a custom shop for other bars. The workflow runs smoothly, mostly. When something goes wrong it goes wrong expensively: pieces that look off no matter how many times they are run through the guide, each pass making them stranger.",
+        "She wants you to check every piece, a fee each. Broken ones cost extra.",
+        "The first one arrives. You find it in under two minutes: the reference photo was shot with a wide lens. Carve from that and the proportions have to be wrong. You tell her to reshoot, and you tell her what to do with the material she has already knocked away.",
+        "The money arrives before you close the message. She is delighted — a problem that had her stuck half a day, solved in two minutes.",
+        "This continues for weeks and both sides do well out of it. She keeps notes after every call. Then one day she sends you a document: a checklist she has built out of everything you have told her. <em>What am I missing?</em>",
+        "It is careful work. You correct a few lines, and warn her about the important part: some items have to be read together. Passing one on its own can ruin the whole piece."
+      ],
+      prompt: "She is holding your method, in writing, on her side of the table. What do you do with it?",
+      options: [
+        {
+          label: "Keep the rest to yourself. Answer questions, but never hand over the method.",
+          outcome: ["She keeps paying per question. It works, in the same way that carrying water by hand works.",
+                    "She starts asking fewer questions — not because she knows the answers, but because asking has started to feel expensive."],
+          lesson: "Holding back a method you have already half-taught buys you a few more invoices and costs you the thing that actually compounds: being the person everyone routes the hard questions to."
+        },
+        {
+          label: "Correct it properly and give her the improved version.",
+          outcome: ["She is grateful. She uses it.",
+                    "Six months later three other shops are using it too, and none of them know where it came from."],
+          lesson: "Giving it away builds your reputation and hands your leverage to somebody else's product. Generosity is right. Generosity without a structure is a donation."
+        },
+        {
+          label: "Correct it, hand it over — and quietly start building your own version.",
+          outcome: ["You do both, and the whole time you are aware that you are doing both.",
+                    "It works. It also makes every future conversation with Rosa feel like it has something under the table."],
+          lesson: "Half-honest is a real strategy with a real cost. Note it, and decide whether you can carry it."
+        },
+        {
+          label: "Correct it — and tell her what it is actually worth.",
+          outcome: ["You send back the checklist, and then a second message: this is not a document, it is a product, and it belongs inside the guide.",
+                    "She goes quiet for a day.",
+                    "Then: <em>Yes. Let us talk about that.</em>"],
+          lesson: "The moment you name the asset out loud, you stop being a supplier and become a partner. Most people never say the sentence, and spend years being paid for the wrong thing."
+        }
+      ]
+    },
+    {
+      kicker: "06 / The Number", title: "How Many People Will Use This?",
+      scene: [
+        "The next week she puts a bigger idea on the table.",
+        "Put the checklist inside the guide. Every piece gets checked by your method first; whatever the system cannot handle gets sent to you. They can sell it to other shops. She has already asked around, and they are interested.",
+        "<em>Help me finish the method. Record some examples — what counts as broken, what to check first. We build it. We sell it.</em>",
+        "She pauses.",
+        "<em>This one deserves care. Give me a number.</em>",
+        "You open the laptop. You already have examples in mind. One of them took you three days to understand when you were young.",
+        "You estimate the hours. You type a number."
+      ],
+      prompt: "You look at it. Then you remember the last time you did this — two weeks of talking, and a sentence of yours still going out to strangers every day. What do you send her?",
+      options: [
+        {
+          label: "Send the number. Hours times rate. It is honest work.",
+          outcome: ["She pays it without comment. The guide ships with your checklist inside.",
+                    "It is used four hundred thousand times in the first year.",
+                    "You did the work honestly and were paid honestly, and the two numbers were never in the same universe."],
+          lesson: "An hourly rate assumes your hours are the product. They are not. Your hours produce a method, and the method gets used by people you will never meet."
+        },
+        {
+          label: "Halve it. You are quick now. It should not take long.",
+          outcome: ["She pays, a little puzzled. You have just told her that your judgement scales with your typing speed.",
+                    "She believes you. The price sticks to every conversation you have afterwards."],
+          lesson: "Discounting your own judgement teaches everybody else how to price it. The hammer made your making fast. It did not make your knowing cheap."
+        },
+        {
+          label: "Delete the number. Ask her instead: how many people will use this?",
+          outcome: ["The reply takes a while.",
+                    "<em>Every shop that buys the guide. Hundreds to start. Thousands, eventually.</em>",
+                    "You read it twice. Then you write a different number — and this time you are pricing the method, and everyone who will ever run it.",
+                    "She does not argue. She asks whether you would rather take a share of the sales."],
+          lesson: "A day rate prices your hours. A licence prices your judgement multiplied by everyone who will ever use it. The question is almost never asked, because it makes the other side do arithmetic. <b>Ask it anyway.</b>"
+        },
+        {
+          label: "Ask for a cut of every sale instead of a fee.",
+          outcome: ["She thinks about it and says yes — a small percentage, capped.",
+                    "It is the right shape and the wrong size, because you never asked how big the thing would get. You priced a percentage of a market you never measured."],
+          lesson: "Getting the structure right is half the work. The other half is knowing the scale of what you are attaching yourself to. Never price a share of something you have not sized."
+        }
+      ]
+    }
+  ]
+},
+
+/* ------------------------------ 简体中文 ------------------------------ */
+hans: {
+  docTitle: "人人都有了雷神之锤",
+  ui: {
+    stamp: "一个关于「手艺值多少钱」的短游戏",
+    lede: "某天早上醒来，地球上的每个人都多了一把雷神之锤。",
+    p1: "一周的活，午饭前做完。锤子不会偏，也不会钝——每一击都落在你想让它落的地方。你能做出来的东西，不再稀缺。",
+    p2: "这是一个雕了二十年的匠人的故事——当双手不再是关键，他开始学着卖别的东西。",
+    begin: "开始",
+    beginHint: "共六章。你的选择会改变上方的数值。",
+    cash: "现金流", standing: "声誉", reach: "影响力", time: "自由时间",
+    exec: "「做得出来」的市场价",
+    restart: "重来",
+    outcomeSuffix: "结果",
+    lessonTag: "刚才发生了什么",
+    next: "继续", last: "看看结局",
+    nextHint: "值钱的是判断，不是手艺。",
+    epilogue: "尾声",
+    endTitle: "锤子留下了什么",
+    finishedAs: "你的结局",
+    lessonHeader: "你的六个选择，以及各自教会了你什么",
+    pointTag: "要点",
+    again: "再玩一次", replay: "重玩某一章",
+    share: "生成分享卡片",
+    shareTitle: "你的结果卡片",
+    shareHint: "长按图片保存，或点下面的下载。然后直接发出去。",
+    download: "下载图片",
+    copyText: "复制文字",
+    shareNative: "分享",
+    close: "关闭",
+    copied: "已复制到剪贴板",
+    copyFail: "复制失败，请手动选中文字。",
+    cardFooter: "六个选择，一个问题。你也来玩一遍。"
+  },
+  ranks: [
+    { name: "眼力", text: "你不再给自己的时间定价，而是给判断力定价，再乘以所有会用到它的人。你没有变得更会雕。你只是搞清楚了，自己到底在卖什么。" },
+    { name: "编审", text: "你明白了稀缺的不是「做」，而是「决定」。你卖的是看、是检查、是判断——而这比你的一双手能触达的地方远得多。" },
+    { name: "匠人", text: "你靠往上走活了下来。更好的客户、更好的活、更少的大众单。很扎实——但也依然绑在你自己的手上。" },
+    { name: "计件工", text: "在一个「小时」已经免费的世界里，你继续卖小时。锤子对你很好，你也得到了相应的报酬。只有一次。" }
+  ],
+  end: {
+    p1: "匠人最后做的，不是发一个价格。他问了一个问题——这份清单，你准备让多少人用？——在问出口的那一刻，他改变了自己在卖什么。不是他的小时，而是他的判断力，乘以所有会用到它的人。",
+    p2: "他从来没有变得更会雕。他只是更清楚自己在卖什么。",
+    c1: "<strong>雷神之锤就是 AI。</strong>现在人人都有。写、画、编程、雕刻——当机器能在午饭前做完，这些事就不再稀缺。",
+    c2: "仍然稀缺的是：知道该看什么。知道什么时候不对。知道坏了之后怎么办。以及，拥有属于你自己的那张判断力的地图。",
+    c3: "匠人一开始靠手赚钱，最后靠眼睛赚钱。那是锤子唯一复制不了的部分。",
+    c4: "<strong>锤子从来不是资产。眼睛才是。</strong>",
+    q: "那么：你的锤子是什么？而只有你的眼睛知道什么？"
+  },
+  chapters: [
+    {
+      kicker: "01 / 雷神之锤", title: "本该一周的活，午饭前做完",
+      scene: [
+        "周二早上，你在工作台上发现了那把锤子。你没问它从哪来。现在人人都有。",
+        "到中午，你已经做完了一笔本该花一周的订单。你拍了张照片，发给街角酒馆的老板<em>罗莎</em>。",
+        "她回得很快。<em>「漂亮。后面那三尊，能便宜多少？」</em>",
+        "你还没想好怎么回，同行群里弹出一张新价目表——比你低四成。"
+      ],
+      prompt: "你认真算了一遍账。降价也还有赚，省下的工时足够你接更多的单。你给罗莎报什么价？",
+      options: [
+        {
+          label: "守住原价。二十年就是二十年。",
+          outcome: ["罗莎说再想想。她没下单。",
+                    "两周后，同样的三尊出现在她门口。还行。不是好——是还行。路过的人看不出区别。"],
+          lesson: "你的手艺没退步，只是变得看不见了。当机器也能做出「还行」，「还行」就一文不值——而看不出区别的人，就成了你全部的市场。"
+        },
+        {
+          label: "降三成。还有得赚，省下的工时能接更多活。",
+          outcome: ["你还没打完字，她就把定金付了。",
+                    "你三点就收工。回家路上在市场买了条当天早上还在游的鱼。雕了二十年，你很少在工作日赶上这样的下午。",
+                    "这确实是把好锤子。"],
+          lesson: "这是陷阱，但它不像陷阱。产量涨了，收入也涨了——可你的价格从此由「谁的锤子最便宜」决定，不再由你决定。你是在一个速度免费的世界里，靠速度换钱。"
+        },
+        {
+          label: "价格不变，但打包卖：五尊，包送货包安装。",
+          outcome: ["她一口答应，没还价。",
+                    "她买的从来不是石头。她买的是一个能让路人停下脚步的门面。"],
+          lesson: "你不再卖雕刻，你开始卖结果。锤子让雕刻变便宜了，但它没让「一个能让人停下脚步的东西」变便宜。"
+        },
+        {
+          label: "先问她这三尊是干什么用的，再报价。",
+          outcome: ["她门口的招牌快散了，这三尊是摆在门洞旁的。",
+                    "你按「门洞」报价，不按石头报价。她眼皮都没抬。"],
+          lesson: "价格取决于这东西能干什么，而不是你花了多久。这条规则不是锤子发明的——锤子只是让它再也躲不掉。"
+        }
+      ]
+    },
+    {
+      kicker: "02 / 那家公司", title: "你动手之前，在看什么？",
+      scene: [
+        "一家做锤子配套系统的公司找上门。他们在做一套头像雕刻程序：用户上传照片，系统给出第一锤该怎么落；每做完一步，再拍张照片，给出下一步。",
+        "<em>「我们需要知道，您动手之前都在看什么。」</em>",
+        "这个问题比你想的更有意思。你看一眼石头就知道该怎么做；具体在看什么，反而要停下来想。",
+        "他们跟着你待了半个月，拍下你修改自己作品的过程，每一次都追问理由。有天下午，一个新手把鼻子削多了，你顺势把整张脸的比例拉了回来。旁边的人赶紧让你把刚才那段再讲一遍。他们特别喜欢这类东西——新手会一直犯这个错，程序需要知道下一句该提醒什么。",
+        "你喜欢这份工作。有人愿意坐下来听你的手。你按半个月的工时报了价，对方当天就付了，还送了一套系统的终身授权。"
+      ],
+      prompt: "他们就要把你的判断力装进口袋带走了。这份合同，你是怎么写的？",
+      options: [
+        {
+          label: "按日薪结两周。简单、稳妥、了结。",
+          outcome: ["干净的钱。",
+                    "然后系统上线了——你第十一天说的一句话，一字不差地出现在里面。你看着另一个国家的陌生人照着你的话动手，而你从中拿不到一分钱。",
+                    "也不是一分没有。你拿到了两周。"],
+          lesson: "你被按时间付费。你卖出的其实是判断力——而判断力一旦被记录，不会因为你下班就停止工作。日薪定价不了会被免费复制的东西。"
+        },
+        {
+          label: "日薪照付，另外每个用户抽一点授权费。",
+          outcome: ["屋里安静了。有人问你认真的吗。你说是，他们说回去商量。",
+                    "三周后他们回来了。授权费比你开的低——但确实有。"],
+          lesson: "整个游戏的规则，就在这一条里。<b>时间只能卖一次，方法每被用一次就能卖一次。</b>锤子让你的手变便宜了，同时也让你的方法变得可复制——而可复制的东西，是可以授权收费的。"
+        },
+        {
+          label: "一次性买断，归他们。拿钱走人。",
+          outcome: ["这是你收到过的最大一笔钱。",
+                    "大约有一年，它看起来很多。然后你发现那套系统有一百万用户，而他们付给你的数字开始像一笔零头。"],
+          lesson: "一次性卖断方法，等于卖一块地换一顿饭。这个选择没错——只要你知道自己在做什么。"
+        },
+        {
+          label: "日薪照付，但要署名，而且每条提示的措辞你有最终决定权。",
+          outcome: ["他们犹豫了一下，答应了。",
+                    "你的名字印在系统底部。有次他们想把一句警告改得温和些，你说不行——他们就留着了。"],
+          lesson: "这里在建两样东西：一个产品，和一份声誉。只有后者会复利。任何承载你判断力的东西，都要把你的名字挂上去。"
+        }
+      ]
+    },
+    {
+      kicker: "03 / 复制品", title: "喝过两杯都认得出来",
+      scene: [
+        "一个月后，罗莎发来一张照片。一尊头像，大致算个头。耳朵是歪的，头发像几片卷起来的菜叶。你放大看了半天，才注意到照片角上有那套系统的水印。",
+        "<em>「照着您那个教程做的，」</em>她说，<em>「您看看怎么样？」</em>",
+        "你回了几条修改建议。最要紧的是嘴角，她其实已经很接近了。",
+        "她立刻打来视频，把头像举给旁边的酒保看。酒保笑了一声。罗莎把镜头转回来：<em>「行。晚上放门口，喝过两杯都认得出来。」</em>",
+        "几天后，你在她的动态里看见那尊头像。灯光照着，歪掉的耳朵藏在阴影里，旁边有人搂着它合影。她的配文是：<em>「本人亲手制作。」</em>底下有其他开店的人问她多少钱。"
+      ],
+      prompt: "你的客户刚刚变成了你的同行，而且她做得并不好。你怎么办？",
+      options: [
+        {
+          label: "不再教，不再发，收紧了。方法就是你的护城河。",
+          outcome: ["你守住了方法。你也把它关在屋里，而整条街在互相学习，没有你。",
+                    "半年后，没人再问你怎么看。"],
+          lesson: "在一个每个人都有雷神之锤的世界里，你锁不住一个方法。信息早就出去了。唯一还没定的，是你的名字在不在上面。"
+        },
+        {
+          label: "什么都不说，往高处走。她那些角落里的摆件，从来就不是你的市场。",
+          outcome: ["一个月里你接到三笔订单，客户都是看了她的动态、想要真东西的人。",
+                    "市场的底部塌了，本来就该塌。你没有失去一个客户，你失去了一个品类。"],
+          lesson: "大众那层从来就不是你的收入。它塌掉之后，剩下的是顶部——而顶部，突然对所有刚学会分辨的人来说，变得可见了。"
+        },
+        {
+          label: "公开恭喜她——然后把自己的作品发在旁边。",
+          outcome: ["你写了一段真心实意的称赞。然后把你的作品放在她旁边。",
+                    "你一个字都没说哪个是哪个。没人需要你说。"],
+          lesson: "对比，是给更好那一方的免费广告。品味是锤子唯一发不出来的东西。"
+        },
+        {
+          label: "提出帮她修。按尊收费。",
+          outcome: ["她送来四尊。你每尊花二十分钟。",
+                    "这是你这些年赚得最轻松的钱，也是第一次纯粹因为「看」而被付钱。"],
+          lesson: "你刚刚误打误撞发现了一个新产品：不是做东西，是改东西。记住这一点。"
+        }
+      ]
+    },
+    {
+      kicker: "04 / 新菜单", title: "右耳要垂一点",
+      scene: [
+        "你接的活开始变了样。",
+        "从前，一张订单是完整的：设计、粗凿、精修。如今有人发来一件做了一半的东西，只请你处理最难的部分。还有人约半个小时，让你看看自己的方案究竟能不能做。",
+        "你重新列了一张价目表，一项一项写进去。",
+        "新客户也来了。一位老太太拿着手机进店，屏幕上是一张狗的照片。她想做一尊小像。几年前她问过价格，一直没舍得。这次她付定金时没有犹豫，只反复叮嘱一件事，说了三遍：右耳要垂下来一点。",
+        "店里的作品明显多了。你始终没招第二个人。有时下午四点就做完当天的活，你坐在门口刷手机，看这个世界雕刻。",
+        "有的粗糙得让你手痒，有的已经相当像样。大多数人雕完一件，就兴冲冲地给自己再做一件。他们可能一辈子都不会走进你的店。那把锤子给了他们一种你很熟悉的生活——盯着一块材料，琢磨自己还能拿它做点什么。"
+      ],
+      prompt: "你在写新的价目表。第一项写什么？",
+      options: [
+        {
+          label: "所有东西都降价。你现在快，就拼价格。",
+          outcome: ["前两个月，你赢下了每一单。",
+                    "第三个月，一个同样有雷神之锤、而且这个月不用吃饭的人把你压下去了。你只好再降。",
+                    "这就是全部的游戏，而且它没有终点。"],
+          lesson: "速度是锤子给所有人的同一个优势。拿它竞争，就是一场高速跑向零的比赛。"
+        },
+        {
+          label: "一张「判断」的菜单：看方案能不能做、救场、收尾、验收「这样算好了吗」。为决定收费，不为锤子收费。",
+          outcome: ["写在纸上很奇怪，但立刻就行得通。",
+                    "人们为你二十分钟的注意力付的钱，比过去为你一周的手工付的还多。菜单上的项目都很短。它们其实是同一件事：你，在看。"],
+          lesson: "当「做」变得免费，计费单位就变了。它不再是小时，而是决定。<b>把你的手艺拆开，只卖只有你能做的那部分。</b>"
+        },
+        {
+          label: "月度顾问费——持续获得你的眼光。",
+          outcome: ["第一个月就有三家店签了。",
+                    "单店不多，但它不管你干不干活都会到账。这是二十年来第一笔不需要你站起来的钱。"],
+          lesson: "经常性收入，是你停止卖「单次事件」、开始卖「长期关系」之后发生的事。它是工资和资产之间的区别。"
+        },
+        {
+          label: "只接完整订单。你不是修理铺。",
+          outcome: ["来的活都很出色，但更少了。",
+                    "你花在打粗坯上的时间比这些年都多，看的时间更少。你做得很好。",
+                    "你也发现，你累了。"],
+          lesson: "守住「我是做东西的人」这个身份很舒服。但这也意味着，你把你最稀缺的资源——判断力——花在了机器已经会做的那部分工作上。"
+        }
+      ]
+    },
+    {
+      kicker: "05 / 两分钟", title: "那张检查清单",
+      scene: [
+        "罗莎给别的酒馆开了家定制小店。流程基本跑得顺。可一旦出问题，就很费钱：有些作品怎么看都不对，照着系统改几轮，越改越奇怪。",
+        "她想请你逐件检查，每件付一笔费用。有问题的另算。",
+        "第一件发过来。你不到两分钟就找到了问题：顾客给的参考照用了广角。照着那张照片雕，比例必然不对。你让她补拍一张，又告诉她已经砸掉的那部分怎么处理。",
+        "你还没关掉消息，钱就到了。她很满意——卡了她半天的问题，两分钟解决。",
+        "这样持续了几周，双方都赚到了钱。她每次问完都会记笔记。有一天，她发来一份文档：一张照着你所有建议整理出来的检查清单。<em>「还缺什么？」</em>",
+        "写得很认真。你改了几处，并提醒她最关键的一点：有些项目必须结合起来看。单独符合一项，也可能把整体弄坏。"
+      ],
+      prompt: "你的方法已经写成了文字，就摊在她那边的桌面上。你拿它怎么办？",
+      options: [
+        {
+          label: "剩下的留在自己手里。可以回答问题，但绝不交出方法。",
+          outcome: ["她继续按问题付费。这办法行得通，就像用手挑水也行得通一样。",
+                    "她开始少问了——不是因为她知道答案，而是因为「问」开始变得很贵。"],
+          lesson: "藏起一个你已经教了一半的方法，能给你多几张账单，代价是失去那件真正会复利的事：成为所有人把难题推过去的那个人。"
+        },
+        {
+          label: "认真改好，把更好的版本送给她。",
+          outcome: ["她很感激，也确实在用。",
+                    "半年后，另外三家店也在用它，而他们都不知道它从哪来。"],
+          lesson: "送出去能积累你的声誉，同时也把你的筹码交给了别人的产品。慷慨是对的。没有结构的慷慨，叫捐赠。"
+        },
+        {
+          label: "改好，交出去——同时悄悄开始做自己的一份。",
+          outcome: ["你两件事都做了，而且全程都知道自己在做两件事。",
+                    "它有效。但它也让之后每一次和罗莎的对话，都像桌面下藏着什么。"],
+          lesson: "半诚实是一种真实存在的策略，也有真实的代价。记下它，然后决定你背不背得动。"
+        },
+        {
+          label: "改好——并且告诉她这东西到底值多少。",
+          outcome: ["你发回清单，又补了一条消息：这不是一份文档，这是一个产品，它应该长在那套系统里。",
+                    "她安静了一天。",
+                    "然后：<em>「好。我们谈谈这个。」</em>"],
+          lesson: "你把这笔资产说出口的那一刻，你就不再是供应商，而是合伙人。大多数人一辈子都没说出这句话，然后花很多年，为错的东西收钱。"
+        }
+      ]
+    },
+    {
+      kicker: "06 / 那个数字", title: "你准备让多少人用？",
+      scene: [
+        "第二周，她把一个更大的想法放上桌面。",
+        "把清单接进系统。以后每件作品先按你的方法过一遍，系统处理不了的，再发给你。这套东西还能卖给别的店——她已经问过几个同行，大家都感兴趣。",
+        "<em>「帮我把方法整理完整，再录一些示范——什么情况算有问题，遇到问题先查哪里。我们来做系统，也负责卖。」</em>",
+        "她停了一下。",
+        "<em>「这个得好好做。您报个价。」</em>",
+        "你打开电脑。你已经想起好几个值得录下来的例子。其中一个，是你年轻时折腾了整整三天才弄明白的。",
+        "你估了估需要的时间，在报价单上打了一个数字。"
+      ],
+      prompt: "你看着那个数字。然后你想起上一次：半个月的谈话，而你的一句话至今每天都在发给陌生人。你发给她什么？",
+      options: [
+        {
+          label: "把数字发过去。工时乘时薪，老实活。",
+          outcome: ["她没多问就付了。系统带着你的清单上线。",
+                    "第一年，它被使用了四十万次。",
+                    "你老老实实干活，对方老老实实付钱，而这两个数字从来就不在同一个量级。"],
+          lesson: "按小时报价，前提是「你的小时」就是产品。它不是。你的小时产出的是一个方法，而那个方法会被你永远不会见到的人使用。"
+        },
+        {
+          label: "打个对折。你现在快，用不了太久。",
+          outcome: ["她付了，有点疑惑。你刚刚告诉她：你的判断力，跟你的打字速度挂钩。",
+                    "她信了。而这个价格，会粘在你之后每一次谈话上。"],
+          lesson: "给自己的判断力打折，就是在教所有人怎么给你定价。锤子让你的「做」变快了。它没让你的「懂」变便宜。"
+        },
+        {
+          label: "删掉那个数字。问她：这份清单，你准备让多少人用？",
+          outcome: ["她过了好一会儿才回。",
+                    "<em>「每个买系统的店。一开始几百家。最后大概几千家。」</em>",
+                    "你看了两遍。然后写了一个不同的数字——这一次，你定价的是方法本身，以及所有会用到它的人。",
+                    "她没有争。她问你要不要干脆改成销售分成。"],
+          lesson: "日薪定价的是你的小时。授权定价的是你的判断力，乘以所有会用到它的人。这个问题几乎没人问，因为它会让对方不得不算账。<b>还是要问。</b>"
+        },
+        {
+          label: "不要一次性的费用，要每笔销售的分成。",
+          outcome: ["她想了想，答应了——一个小比例，有上限。",
+                    "形状对了，大小错了，因为你从没问过这件事会做多大。你给一个自己没量过的市场定了百分比。"],
+          lesson: "把结构谈对，只完成了一半。另一半是搞清楚你要挂上去的这东西有多大。永远不要给你没量过的东西定价。"
+        }
+      ]
+    }
+  ]
+},
+
+/* ------------------------------ 繁體中文 ------------------------------ */
+hant: {
+  docTitle: "人人都有了雷神之錘",
+  ui: {
+    stamp: "一個關於「手藝值多少錢」的短遊戲",
+    lede: "某天早上醒來，地球上的每個人都多了一把雷神之錘。",
+    p1: "一週的活，午飯前做完。錘子不會偏，也不會鈍——每一擊都落在你想讓它落的地方。你能做出來的東西，不再稀缺。",
+    p2: "這是一個雕了二十年的匠人的故事——當雙手不再是關鍵，他開始學著賣別的東西。",
+    begin: "開始",
+    beginHint: "共六章。你的選擇會改變上方的數值。",
+    cash: "現金流", standing: "聲譽", reach: "影響力", time: "自由時間",
+    exec: "「做得出來」的市場價",
+    restart: "重來",
+    outcomeSuffix: "結果",
+    lessonTag: "剛才發生了什麼",
+    next: "繼續", last: "看看結局",
+    nextHint: "值錢的是判斷，不是手藝。",
+    epilogue: "尾聲",
+    endTitle: "錘子留下了什麼",
+    finishedAs: "你的結局",
+    lessonHeader: "你的六個選擇，以及各自教會了你什麼",
+    pointTag: "要點",
+    again: "再玩一次", replay: "重玩某一章",
+    share: "產生分享卡片",
+    shareTitle: "你的結果卡片",
+    shareHint: "長按圖片儲存，或點下面的下載。然後直接發出去。",
+    download: "下載圖片",
+    copyText: "複製文字",
+    shareNative: "分享",
+    close: "關閉",
+    copied: "已複製到剪貼簿",
+    copyFail: "複製失敗，請手動選取文字。",
+    cardFooter: "六個選擇，一個問題。你也來玩一遍。"
+  },
+  ranks: [
+    { name: "眼力", text: "你不再給自己的時間定價，而是給判斷力定價，再乘以所有會用到它的人。你沒有變得更會雕。你只是搞清楚了，自己到底在賣什麼。" },
+    { name: "編審", text: "你明白了稀缺的不是「做」，而是「決定」。你賣的是看、是檢查、是判斷——而這比你的一雙手能觸達的地方遠得多。" },
+    { name: "匠人", text: "你靠往上走活了下來。更好的客戶、更好的活、更少的大眾單。很紮實——但也依然綁在你自己的手上。" },
+    { name: "計件工", text: "在一個「小時」已經免費的世界裡，你繼續賣小時。錘子對你很好，你也得到了相應的報酬。只有一次。" }
+  ],
+  end: {
+    p1: "匠人最後做的，不是發一個價格。他問了一個問題——這份清單，你準備讓多少人用？——在問出口的那一刻，他改變了自己在賣什麼。不是他的小時，而是他的判斷力，乘以所有會用到它的人。",
+    p2: "他從來沒有變得更會雕。他只是更清楚自己在賣什麼。",
+    c1: "<strong>雷神之錘就是 AI。</strong>現在人人都有。寫、畫、程式、雕刻——當機器能在午飯前做完，這些事就不再稀缺。",
+    c2: "仍然稀缺的是：知道該看什麼。知道什麼時候不對。知道壞了之後怎麼辦。以及，擁有屬於你自己的那張判斷力的地圖。",
+    c3: "匠人一開始靠手賺錢，最後靠眼睛賺錢。那是錘子唯一複製不了的部分。",
+    c4: "<strong>錘子從來不是資產。眼睛才是。</strong>",
+    q: "那麼：你的錘子是什麼？而只有你的眼睛知道什麼？"
+  },
+  chapters: [
+    {
+      kicker: "01 / 雷神之錘", title: "本該一週的活，午飯前做完",
+      scene: [
+        "週二早上，你在工作台上發現了那把錘子。你沒問它從哪來。現在人人都有。",
+        "到中午，你已經做完了一筆本該花一週的訂單。你拍了張照片，發給街角酒館的老闆<em>羅莎</em>。",
+        "她回得很快。<em>「漂亮。後面那三尊，能便宜多少？」</em>",
+        "你還沒想好怎麼回，同行群裡彈出一張新價目表——比你低四成。"
+      ],
+      prompt: "你認真算了一遍帳。降價也還有賺，省下的工時足夠你接更多的單。你給羅莎報什麼價？",
+      options: [
+        {
+          label: "守住原價。二十年就是二十年。",
+          outcome: ["羅莎說再想想。她沒下單。",
+                    "兩週後，同樣的三尊出現在她門口。還行。不是好——是還行。路過的人看不出區別。"],
+          lesson: "你的手藝沒退步，只是變得看不見了。當機器也能做出「還行」，「還行」就一文不值——而看不出區別的人，就成了你全部的市場。"
+        },
+        {
+          label: "降三成。還有得賺，省下的工時能接更多活。",
+          outcome: ["你還沒打完字，她就把定金付了。",
+                    "你三點就收工。回家路上在市場買了條當天早上還在游的魚。雕了二十年，你很少在工作日趕上這樣的下午。",
+                    "這確實是把好錘子。"],
+          lesson: "這是陷阱，但它不像陷阱。產量漲了，收入也漲了——可你的價格從此由「誰的錘子最便宜」決定，不再由你決定。你是在一個速度免費的世界裡，靠速度換錢。"
+        },
+        {
+          label: "價格不變，但打包賣：五尊，包送貨包安裝。",
+          outcome: ["她一口答應，沒還價。",
+                    "她買的從來不是石頭。她買的是一個能讓路人停下腳步的門面。"],
+          lesson: "你不再賣雕刻，你開始賣結果。錘子讓雕刻變便宜了，但它沒讓「一個能讓人停下腳步的東西」變便宜。"
+        },
+        {
+          label: "先問她這三尊是幹什麼用的，再報價。",
+          outcome: ["她門口的招牌快散了，這三尊是擺在門洞旁的。",
+                    "你按「門洞」報價，不按石頭報價。她眼皮都沒抬。"],
+          lesson: "價格取決於這東西能幹什麼，而不是你花了多久。這條規則不是錘子發明的——錘子只是讓它再也躲不掉。"
+        }
+      ]
+    },
+    {
+      kicker: "02 / 那家公司", title: "你動手之前，在看什麼？",
+      scene: [
+        "一家做錘子配套系統的公司找上門。他們在做一套頭像雕刻程式：使用者上傳照片，系統給出第一錘該怎麼落；每做完一步，再拍張照片，給出下一步。",
+        "<em>「我們需要知道，您動手之前都在看什麼。」</em>",
+        "這個問題比你想的更有意思。你看一眼石頭就知道該怎麼做；具體在看什麼，反而要停下來想。",
+        "他們跟著你待了半個月，拍下你修改自己作品的過程，每一次都追問理由。有天下午，一個新手把鼻子削多了，你順勢把整張臉的比例拉了回來。旁邊的人趕緊讓你把剛才那段再講一遍。他們特別喜歡這類東西——新手會一直犯這個錯，程式需要知道下一句該提醒什麼。",
+        "你喜歡這份工作。有人願意坐下來聽你的手。你按半個月的工時報了價，對方當天就付了，還送了一套系統的終身授權。"
+      ],
+      prompt: "他們就要把你的判斷力裝進口袋帶走了。這份合約，你是怎麼寫的？",
+      options: [
+        {
+          label: "按日薪結兩週。簡單、穩妥、了結。",
+          outcome: ["乾淨的錢。",
+                    "然後系統上線了——你第十一天說的一句話，一字不差地出現在裡面。你看著另一個國家的陌生人照著你的話動手，而你從中拿不到一分錢。",
+                    "也不是一分沒有。你拿到了兩週。"],
+          lesson: "你被按時間付費。你賣出的其實是判斷力——而判斷力一旦被記錄，不會因為你下班就停止工作。日薪定價不了會被免費複製的東西。"
+        },
+        {
+          label: "日薪照付，另外每個使用者抽一點授權費。",
+          outcome: ["屋裡安靜了。有人問你認真的嗎。你說是，他們說回去商量。",
+                    "三週後他們回來了。授權費比你開的低——但確實有。"],
+          lesson: "整個遊戲的規則，就在這一條裡。<b>時間只能賣一次，方法每被用一次就能賣一次。</b>錘子讓你的手變便宜了，同時也讓你的方法變得可複製——而可複製的東西，是可以授權收費的。"
+        },
+        {
+          label: "一次性買斷，歸他們。拿錢走人。",
+          outcome: ["這是你收到過的最大一筆錢。",
+                    "大約有一年，它看起來很多。然後你發現那套系統有一百萬使用者，而他們付給你的數字開始像一筆零頭。"],
+          lesson: "一次性賣斷方法，等於賣一塊地換一頓飯。這個選擇沒錯——只要你知道自己在做什麼。"
+        },
+        {
+          label: "日薪照付，但要署名，而且每條提示的措辭你有最終決定權。",
+          outcome: ["他們猶豫了一下，答應了。",
+                    "你的名字印在系統底部。有次他們想把一句警告改得溫和些，你說不行——他們就留著了。"],
+          lesson: "這裡在建兩樣東西：一個產品，和一份聲譽。只有後者會複利。任何承載你判斷力的東西，都要把你的名字掛上去。"
+        }
+      ]
+    },
+    {
+      kicker: "03 / 複製品", title: "喝過兩杯都認得出來",
+      scene: [
+        "一個月後，羅莎發來一張照片。一尊頭像，大致算是個頭。耳朵是歪的，頭髮像幾片捲起來的菜葉。你放大看了半天，才注意到照片角上有那套系統的浮水印。",
+        "<em>「照著您那個教學做的，」</em>她說，<em>「您看看怎麼樣？」</em>",
+        "你回了幾條修改建議。最要緊的是嘴角，她其實已經很接近了。",
+        "她立刻打來視訊，把頭像舉給旁邊的酒保看。酒保笑了一聲。羅莎把鏡頭轉回來：<em>「行。晚上放門口，喝過兩杯都認得出來。」</em>",
+        "幾天後，你在她的動態裡看見那尊頭像。燈光照著，歪掉的耳朵藏在陰影裡，旁邊有人摟著它合影。她的配文是：<em>「本人親手製作。」</em>底下有其他開店的人問她多少錢。"
+      ],
+      prompt: "你的客戶剛剛變成了你的同行，而且她做得並不好。你怎麼辦？",
+      options: [
+        {
+          label: "不再教，不再發，收緊了。方法就是你的護城河。",
+          outcome: ["你守住了方法。你也把它關在屋裡，而整條街在互相學習，沒有你。",
+                    "半年後，沒人再問你怎麼看。"],
+          lesson: "在一個每個人都有雷神之錘的世界裡，你鎖不住一個方法。資訊早就出去了。唯一還沒定的，是你的名字在不在上面。"
+        },
+        {
+          label: "什麼都不說，往高處走。她那些角落裡的擺件，從來就不是你的市場。",
+          outcome: ["一個月裡你接到三筆訂單，客戶都是看了她的動態、想要真東西的人。",
+                    "市場的底部塌了，本來就該塌。你沒有失去一個客戶，你失去了一個品類。"],
+          lesson: "大眾那層從來就不是你的收入。它塌掉之後，剩下的是頂部——而頂部，突然對所有剛學會分辨的人來說，變得可見了。"
+        },
+        {
+          label: "公開恭喜她——然後把自己的作品發在旁邊。",
+          outcome: ["你寫了一段真心實意的稱讚。然後把你的作品放在她旁邊。",
+                    "你一個字都沒說哪個是哪個。沒人需要你說。"],
+          lesson: "對比，是給更好那一方的免費廣告。品味是錘子唯一發不出來的東西。"
+        },
+        {
+          label: "提出幫她修。按尊收費。",
+          outcome: ["她送來四尊。你每尊花二十分鐘。",
+                    "這是你這些年賺得最輕鬆的錢，也是第一次純粹因為「看」而被付錢。"],
+          lesson: "你剛剛誤打誤撞發現了一個新產品：不是做東西，是改東西。記住這一點。"
+        }
+      ]
+    },
+    {
+      kicker: "04 / 新菜單", title: "右耳要垂一點",
+      scene: [
+        "你接的活開始變了樣。",
+        "從前，一張訂單是完整的：設計、粗鑿、精修。如今有人發來一件做了一半的東西，只請你處理最難的部分。還有人約半個小時，讓你看看自己的方案究竟能不能做。",
+        "你重新列了一張價目表，一項一項寫進去。",
+        "新客戶也來了。一位老太太拿著手機進店，螢幕上是一張狗的照片。她想做一尊小像。幾年前她問過價格，一直沒捨得。這次她付定金時沒有猶豫，只反覆叮囑一件事，說了三遍：右耳要垂下來一點。",
+        "店裡的作品明顯多了。你始終沒招第二個人。有時下午四點就做完當天的活，你坐在門口滑手機，看這個世界雕刻。",
+        "有的粗糙得讓你手癢，有的已經相當像樣。大多數人雕完一件，就興沖沖地給自己再做一件。他們可能一輩子都不會走進你的店。那把錘子給了他們一種你很熟悉的生活——盯著一塊材料，琢磨自己還能拿它做點什麼。"
+      ],
+      prompt: "你在寫新的價目表。第一項寫什麼？",
+      options: [
+        {
+          label: "所有東西都降價。你現在快，就拼價格。",
+          outcome: ["前兩個月，你贏下了每一單。",
+                    "第三個月，一個同樣有雷神之錘、而且這個月不用吃飯的人把你壓下去了。你只好再降。",
+                    "這就是全部的遊戲，而且它沒有終點。"],
+          lesson: "速度是錘子給所有人的同一個優勢。拿它競爭，就是一場高速跑向零的比賽。"
+        },
+        {
+          label: "一張「判斷」的菜單：看方案能不能做、救場、收尾、驗收「這樣算好了嗎」。為決定收費，不為錘子收費。",
+          outcome: ["寫在紙上很奇怪，但立刻就行得通。",
+                    "人們為你二十分鐘的注意力付的錢，比過去為你一週的手工付的還多。菜單上的項目都很短。它們其實是同一件事：你，在看。"],
+          lesson: "當「做」變得免費，計費單位就變了。它不再是小時，而是決定。<b>把你的手藝拆開，只賣只有你能做的那部分。</b>"
+        },
+        {
+          label: "月度顧問費——持續獲得你的眼光。",
+          outcome: ["第一個月就有三家店簽了。",
+                    "單店不多，但它不管你幹不幹活都會到帳。這是二十年來第一筆不需要你站起來的錢。"],
+          lesson: "經常性收入，是你停止賣「單次事件」、開始賣「長期關係」之後發生的事。它是工資和資產之間的區別。"
+        },
+        {
+          label: "只接完整訂單。你不是修理鋪。",
+          outcome: ["來的活都很出色，但更少了。",
+                    "你花在打粗坯上的時間比這些年都多，看的時間更少。你做得很好。",
+                    "你也發現，你累了。"],
+          lesson: "守住「我是做東西的人」這個身份很舒服。但這也意味著，你把你最稀缺的資源——判斷力——花在了機器已經會做的那部分工作上。"
+        }
+      ]
+    },
+    {
+      kicker: "05 / 兩分鐘", title: "那張檢查清單",
+      scene: [
+        "羅莎給別的酒館開了家訂製小店。流程基本跑得順。可一旦出問題，就很費錢：有些作品怎麼看都不對，照著系統改幾輪，越改越奇怪。",
+        "她想請你逐件檢查，每件付一筆費用。有問題的另算。",
+        "第一件發過來。你不到兩分鐘就找到了問題：顧客給的參考照用了廣角。照著那張照片雕，比例必然不對。你讓她補拍一張，又告訴她已經砸掉的那部分怎麼處理。",
+        "你還沒關掉訊息，錢就到了。她很滿意——卡了她半天的問題，兩分鐘解決。",
+        "這樣持續了幾週，雙方都賺到了錢。她每次問完都會記筆記。有一天，她發來一份文件：一張照著你所有建議整理出來的檢查清單。<em>「還缺什麼？」</em>",
+        "寫得很認真。你改了幾個地方，並提醒她最關鍵的一點：有些項目必須結合起來看。單獨符合一項，也可能把整體弄壞。"
+      ],
+      prompt: "你的方法已經寫成了文字，就攤在她那邊的桌面上。你拿它怎麼辦？",
+      options: [
+        {
+          label: "剩下的留在自己手裡。可以回答問題，但絕不交出方法。",
+          outcome: ["她繼續按問題付費。這辦法行得通，就像用手挑水也行得通一樣。",
+                    "她開始少問了——不是因為她知道答案，而是因為「問」開始變得很貴。"],
+          lesson: "藏起一個你已經教了一半的方法，能給你多幾張帳單，代價是失去那件真正會複利的事：成為所有人把難題推過去的那個人。"
+        },
+        {
+          label: "認真改好，把更好的版本送給她。",
+          outcome: ["她很感激，也確實在用。",
+                    "半年後，另外三家店也在用它，而他們都不知道它從哪來。"],
+          lesson: "送出去能累積你的聲譽，同時也把你的籌碼交給了別人的產品。慷慨是對的。沒有結構的慷慨，叫捐贈。"
+        },
+        {
+          label: "改好，交出去——同時悄悄開始做自己的一份。",
+          outcome: ["你兩件事都做了，而且全程都知道自己在做兩件事。",
+                    "它有效。但它也讓之後每一次和羅莎的對話，都像桌面下藏著什麼。"],
+          lesson: "半誠實是一種真實存在的策略，也有真實的代價。記下它，然後決定你背不背得動。"
+        },
+        {
+          label: "改好——並且告訴她這東西到底值多少。",
+          outcome: ["你發回清單，又補了一條訊息：這不是一份文件，這是一個產品，它應該長在那套系統裡。",
+                    "她安靜了一天。",
+                    "然後：<em>「好。我們談談這個。」</em>"],
+          lesson: "你把這筆資產說出口的那一刻，你就不再是供應商，而是合夥人。大多數人一輩子都沒說出這句話，然後花很多年，為錯的東西收錢。"
+        }
+      ]
+    },
+    {
+      kicker: "06 / 那個數字", title: "你準備讓多少人用？",
+      scene: [
+        "第二週，她把一個更大的想法放上桌面。",
+        "把清單接進系統。以後每件作品先按你的方法過一遍，系統處理不了的，再發給你。這套東西還能賣給別的店——她已經問過幾個同行，大家都感興趣。",
+        "<em>「幫我把方法整理完整，再錄一些示範——什麼情況算有問題，遇到問題先查哪裡。我們來做系統，也負責賣。」</em>",
+        "她停了一下。",
+        "<em>「這個得好好做。您報個價。」</em>",
+        "你打開電腦。你已經想起好幾個值得錄下來的例子。其中一個，是你年輕時折騰了整整三天才弄明白的。",
+        "你估了估需要的時間，在報價單上打了一個數字。"
+      ],
+      prompt: "你看著那個數字。然後你想起上一次：半個月的談話，而你的一句話至今每天都在發給陌生人。你發給她什麼？",
+      options: [
+        {
+          label: "把數字發過去。工時乘時薪，老實活。",
+          outcome: ["她沒多問就付了。系統帶著你的清單上線。",
+                    "第一年，它被使用了四十萬次。",
+                    "你老老實實幹活，對方老老實實付錢，而這兩個數字從來就不在同一個量級。"],
+          lesson: "按小時報價，前提是「你的小時」就是產品。它不是。你的小時產出的是一個方法，而那個方法會被你永遠不會見到的人使用。"
+        },
+        {
+          label: "打個對折。你現在快，用不了太久。",
+          outcome: ["她付了，有點疑惑。你剛剛告訴她：你的判斷力，跟你的打字速度掛鉤。",
+                    "她信了。而這個價格，會黏在你之後每一次談話上。"],
+          lesson: "給自己的判斷力打折，就是在教所有人怎麼給你定價。錘子讓你的「做」變快了。它沒讓你的「懂」變便宜。"
+        },
+        {
+          label: "刪掉那個數字。問她：這份清單，你準備讓多少人用？",
+          outcome: ["她過了好一會兒才回。",
+                    "<em>「每個買系統的店。一開始幾百家。最後大概幾千家。」</em>",
+                    "你看了兩遍。然後寫了一個不同的數字——這一次，你定價的是方法本身，以及所有會用到它的人。",
+                    "她沒有爭。她問你要不要乾脆改成銷售分成。"],
+          lesson: "日薪定價的是你的小時。授權定價的是你的判斷力，乘以所有會用到它的人。這個問題幾乎沒人問，因為它會讓對方不得不算帳。<b>還是要問。</b>"
+        },
+        {
+          label: "不要一次性的費用，要每筆銷售的分成。",
+          outcome: ["她想了想，答應了——一個小比例，有上限。",
+                    "形狀對了，大小錯了，因為你從沒問過這件事會做多大。你給一個自己沒量過的市場定了百分比。"],
+          lesson: "把結構談對，只完成了一半。另一半是搞清楚你要掛上去的這東西有多大。永遠不要給你沒量過的東西定價。"
+        }
+      ]
+    }
+  ]
+}
+};
+
+/* ==========================================================================
+   ENGINE
+   ========================================================================== */
+const LANGS = [
+  { id: 'en',   label: 'EN' },
+  { id: 'hans', label: '简中' },
+  { id: 'hant', label: '繁中' }
+];
+
+let lang = 'en';
+let state = {};
+let view = { type: 'title' };
+
+const stage = document.getElementById('stage');
+const hudEl = document.getElementById('hud');
+
+function L() { return T[lang]; }
+function U() { return T[lang].ui; }
+
+function resetState() {
+  state = {
+    cash: START.cash, standing: START.standing, reach: START.reach, time: START.time,
+    exec: EXEC_CURVE[0], picks: []
+  };
+}
+
+function saveLang() { try { localStorage.setItem('egac-lang', lang); } catch (e) {} }
+function loadLang() {
+  try {
+    const v = localStorage.getItem('egac-lang');
+    if (v && T[v]) lang = v;
+  } catch (e) {}
+}
+
+/* ---------------- HUD ---------------- */
+function meterHTML(label, val, color) {
+  const v = Math.max(2, Math.min(100, val));
+  return '<div class="meter">' +
+    '<div class="lbl"><span>' + label + '</span><b>' + Math.round(val) + '</b></div>' +
+    '<div class="bar"><i style="width:' + v + '%;background:' + color + '"></i></div>' +
+  '</div>';
+}
+
+function renderHUD() {
+  const u = U();
+  const ch = state.chapter || 0;
+  const dots = L().chapters.map(function (_, i) {
+    const cls = i < ch ? 'on' : (i === ch && ch < L().chapters.length ? 'cur' : '');
+    return '<div class="dot ' + cls + '"></div>';
+  }).join('');
+
+  hudEl.innerHTML =
+    '<div class="meters">' +
+      meterHTML(u.cash, state.cash, 'var(--cash)') +
+      meterHTML(u.standing, state.standing, 'var(--stand)') +
+      meterHTML(u.reach, state.reach, 'var(--reach)') +
+      meterHTML(u.time, state.time, 'var(--time)') +
+    '</div>' +
+    '<div class="exec meter">' +
+      '<div class="lbl"><span>' + u.exec + '</span><b>' + state.exec + '</b></div>' +
+      '<div class="bar"><i style="width:' + state.exec + '%;background:var(--exec)"></i></div>' +
+    '</div>' +
+    '<div class="hudright">' +
+      '<div class="dots">' + dots + '</div>' +
+      '<div class="langs">' + LANGS.map(function (l) {
+        return '<button data-lang="' + l.id + '" class="' + (l.id === lang ? 'active' : '') + '">' + l.label + '</button>';
+      }).join('') + '</div>' +
+      '<button class="rst" id="rst">' + u.restart + '</button>' +
+    '</div>';
+
+  hudEl.querySelectorAll('[data-lang]').forEach(function (b) {
+    b.onclick = function () { setLang(b.getAttribute('data-lang')); };
+  });
+  const r = document.getElementById('rst');
+  if (r) r.onclick = function () { resetState(); view = { type: 'title' }; render(); };
+}
+
+/* ---------------- ROUTER ---------------- */
+function render() {
+  document.documentElement.lang = lang === 'en' ? 'en' : (lang === 'hans' ? 'zh-Hans' : 'zh-Hant');
+  document.title = L().docTitle;
+  renderHUD();
+  if (view.type === 'title')   return renderTitle();
+  if (view.type === 'chapter') return renderChapter(view.i);
+  if (view.type === 'outcome') return renderOutcome(view.i, view.k);
+  if (view.type === 'end')     return renderEnd();
+}
+
+function setLang(id) {
+  if (!T[id] || id === lang) return;
+  lang = id;
+  saveLang();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------------- TITLE ---------------- */
+function renderTitle() {
+  state.chapter = 0;
+  state.exec = EXEC_CURVE[0];
+  renderHUD();
+  const u = U();
+  stage.innerHTML =
+    '<div class="card">' +
+      '<div class="stamp"><i></i>' + u.stamp + '</div>' +
+      '<div class="toolart">' +
+        '<svg viewBox="0 0 420 116" xmlns="http://www.w3.org/2000/svg">' +
+          '<defs><linearGradient id="ch" x1="0" y1="0" x2="1" y2="0">' +
+            '<stop offset="0" stop-color="#e2dbcf"/>' +
+            '<stop offset="0.45" stop-color="#4a443a"/>' +
+            '<stop offset="1" stop-color="#191713"/>' +
+          '</linearGradient></defs>' +
+          '<line x1="18" y1="108" x2="404" y2="108" stroke="#ece5d9" stroke-width="1"/>' +
+          '<g transform="rotate(-8 210 52)">' +
+            '<rect x="100" y="41" width="270" height="14" rx="7" fill="url(#ch)"/>' +
+            '<rect x="50" y="12" width="58" height="74" rx="8" fill="#191713"/>' +
+            '<rect x="50" y="12" width="16" height="74" rx="8" fill="#a8542a"/>' +
+          '</g>' +
+        '</svg>' +
+      '</div>' +
+      '<h1>' + L().docTitle + '</h1>' +
+      '<p class="lede">' + u.lede + '</p>' +
+      '<div class="prose"><p>' + u.p1 + '</p><p>' + u.p2 + '</p></div>' +
+      '<div class="acts">' +
+        '<button class="btn" id="go">' + u.begin + '</button>' +
+        '<span class="hint">' + u.beginHint + '</span>' +
+      '</div>' +
+    '</div>';
+  document.getElementById('go').onclick = function () {
+    view = { type: 'chapter', i: 0 };
+    render();
+  };
+}
+
+/* ---------------- CHAPTER ---------------- */
+function renderChapter(i) {
+  state.chapter = i;
+  state.exec = EXEC_CURVE[i];
+  renderHUD();
+  const c = L().chapters[i];
+  const scene = c.scene.map(function (p) { return '<p>' + p + '</p>'; }).join('');
+  const opts = c.options.map(function (o, k) {
+    return '<button class="opt" data-k="' + k + '">' +
+      '<span class="n">' + (k + 1) + '</span><span>' + o.label + '</span></button>';
+  }).join('');
+
+  stage.innerHTML =
+    '<div class="card">' +
+      '<div class="kicker">' + c.kicker + '</div>' +
+      '<h2>' + c.title + '</h2>' +
+      '<div class="prose">' + scene + '</div>' +
+      '<div class="prompt">' + c.prompt + '</div>' +
+      '<div class="opts">' + opts + '</div>' +
+    '</div>';
+
+  stage.querySelectorAll('.opt').forEach(function (el) {
+    el.onclick = function () { choose(i, parseInt(el.getAttribute('data-k'), 10)); };
+  });
+}
+
+/* ---------------- CHOICE ---------------- */
+function chip(label, v) {
+  const cls = v > 0 ? 'up' : (v < 0 ? 'dn' : '');
+  const sign = v > 0 ? '+' : (v < 0 ? '\u2212' : '');
+  return '<span class="chip ' + cls + '">' + label + ' ' + sign + Math.abs(v) + '</span>';
+}
+
+function choose(i, k) {
+  const fx = FX[i][k];
+  state.picks.push({ c: i, k: k });
+  for (const key in fx) {
+    state[key] = Math.max(0, Math.min(100, state[key] + fx[key]));
+  }
+  state.chapter = i;
+  view = { type: 'outcome', i: i, k: k };
+  render();
+}
+
+function renderOutcome(i, k) {
+  const u = U();
+  const c = L().chapters[i];
+  const o = c.options[k];
+  const fx = FX[i][k];
+  const isLast = i === L().chapters.length - 1;
+
+  const chips = chip(u.cash, fx.cash) + chip(u.standing, fx.standing) +
+                chip(u.reach, fx.reach) + chip(u.time, fx.time);
+  const outcome = o.outcome.map(function (p) { return '<p>' + p + '</p>'; }).join('');
+
+  stage.innerHTML =
+    '<div class="card">' +
+      '<div class="kicker">' + c.kicker + ' — ' + u.outcomeSuffix + '</div>' +
+      '<h2>' + c.title + '</h2>' +
+      '<div class="prose">' + outcome + '</div>' +
+      '<div class="chips">' + chips + '</div>' +
+      '<div class="lesson"><div class="tag">' + u.lessonTag + '</div><p>' + o.lesson + '</p></div>' +
+      '<div class="acts">' +
+        '<button class="btn" id="next">' + (isLast ? u.last : u.next) + '</button>' +
+        '<span class="hint">' + u.nextHint + '</span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('next').onclick = function () {
+    if (isLast) { view = { type: 'end' }; render(); }
+    else { view = { type: 'chapter', i: i + 1 }; render(); }
+  };
+}
+
+/* ---------------- ENDING ---------------- */
+function totalScore() {
+  return Math.round(state.cash + state.standing + state.reach + state.time);
+}
+function rankIndex() {
+  const total = totalScore();
+  for (let n = 0; n < RANK_MIN.length; n++) {
+    if (total >= RANK_MIN[n]) return n;
+  }
+  return RANK_MIN.length - 1;
+}
+
+function renderEnd() {
+  const u = U();
+  const t = L();
+  state.chapter = t.chapters.length;
+  state.exec = EXEC_CURVE[EXEC_CURVE.length - 1];
+  renderHUD();
+
+  const ri = rankIndex();
+  const rank = t.ranks[ri];
+
+  const recap = state.picks.map(function (p) {
+    return '<li>' + t.chapters[p.c].options[p.k].lesson + '</li>';
+  }).join('');
+
+  stage.innerHTML =
+    '<div class="card">' +
+      '<div class="kicker">' + u.epilogue + '</div>' +
+      '<h2>' + u.endTitle + '</h2>' +
+
+      '<div class="rank">' +
+        '<div class="rt">' + u.finishedAs + '</div>' +
+        '<h3>' + rank.name + '</h3><p>' + rank.text + '</p>' +
+      '</div>' +
+
+      '<div class="scoregrid">' +
+        '<div class="sg"><div class="k">' + u.cash + '</div><div class="v">' + Math.round(state.cash) + '</div></div>' +
+        '<div class="sg"><div class="k">' + u.standing + '</div><div class="v">' + Math.round(state.standing) + '</div></div>' +
+        '<div class="sg"><div class="k">' + u.reach + '</div><div class="v">' + Math.round(state.reach) + '</div></div>' +
+        '<div class="sg"><div class="k">' + u.time + '</div><div class="v">' + Math.round(state.time) + '</div></div>' +
+      '</div>' +
+
+      '<div class="rule"></div>' +
+      '<div class="prose"><p>' + t.end.p1 + '</p><p>' + t.end.p2 + '</p></div>' +
+      '<div class="rule"></div>' +
+
+      '<div class="kicker">' + u.lessonHeader + '</div>' +
+      '<ol class="recap">' + recap + '</ol>' +
+
+      '<div class="closing">' +
+        '<div class="tag">' + u.pointTag + '</div>' +
+        '<p>' + t.end.c1 + '</p>' +
+        '<p>' + t.end.c2 + '</p>' +
+        '<p>' + t.end.c3 + '</p>' +
+        '<p>' + t.end.c4 + '</p>' +
+        '<div class="q">' + t.end.q + '</div>' +
+      '</div>' +
+
+      '<div class="acts">' +
+        '<button class="btn" id="share">' + u.share + '</button>' +
+        '<button class="btn ghost" id="again">' + u.again + '</button>' +
+        '<button class="btn ghost" id="fromCh">' + u.replay + '</button>' +
+      '</div>' +
+      '<div id="chapick" style="display:none;margin-top:14px" class="opts"></div>' +
+    '</div>';
+
+  document.getElementById('share').onclick = function () { openShare(); };
+
+  document.getElementById('again').onclick = function () {
+    resetState(); view = { type: 'title' }; render();
+  };
+  document.getElementById('fromCh').onclick = function () {
+    const box = document.getElementById('chapick');
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = t.chapters.map(function (c, n) {
+      return '<button class="opt" data-i="' + n + '">' +
+        '<span class="n">' + (n + 1) + '</span><span>' + c.title + '</span></button>';
+    }).join('');
+    box.querySelectorAll('.opt').forEach(function (el) {
+      el.onclick = function () {
+        view = { type: 'chapter', i: parseInt(el.getAttribute('data-i'), 10) };
+        render();
+      };
+    });
+  };
+}
+
+/* ==========================================================================
+   SHARE CARD  —  drawn on canvas so the download is pixel-identical
+   to the on-screen preview (no html2canvas, no dependencies)
+   ========================================================================== */
+const F_SERIF = 'Georgia, "Times New Roman", "Songti SC", "STSong", SimSun, "Noto Serif CJK SC", serif';
+const F_SANS  = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif';
+const NO_LINE_START = '。，、；：？！）》」』】”’…·.,;:?!)]}';
+
+/* CJK chars wrap anywhere; latin words stay whole */
+function tokens(str) {
+  const out = [];
+  let buf = '';
+  for (const ch of str) {
+    if (/[\u2E80-\u9FFF\u3000-\u303F\uFF00-\uFFEF]/.test(ch)) {
+      if (buf) { out.push(buf); buf = ''; }
+      out.push(ch);
+    } else if (ch === ' ') {
+      if (buf) { out.push(buf); buf = ''; }
+      out.push(' ');
+    } else {
+      buf += ch;
+    }
+  }
+  if (buf) out.push(buf);
+  return out;
+}
+
+function wrapLines(ctx, text, maxW) {
+  const tk = tokens(text);
+  const lines = [];
+  let cur = '';
+  for (let i = 0; i < tk.length; i++) {
+    const t = tk[i];
+    const test = cur + t;
+    if (cur && ctx.measureText(test).width > maxW) {
+      if (NO_LINE_START.indexOf(t) >= 0) {
+        cur = test;                       /* closing punctuation may overflow slightly */
+      } else {
+        lines.push(cur.replace(/\s+$/, ''));
+        cur = (t === ' ') ? '' : t;
+      }
+    } else {
+      cur = test;
+    }
+  }
+  if (cur.replace(/\s+$/, '')) lines.push(cur.replace(/\s+$/, ''));
+  return lines;
+}
+
+/* canvas has no letter-spacing — draw glyph by glyph */
+function spacedText(ctx, text, x, y, sp) {
+  let px = x;
+  for (const ch of text) {
+    ctx.fillText(ch, px, y);
+    px += ctx.measureText(ch).width + sp;
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function buildCard() {
+  const u = U(), t = L();
+  const W = 1080, H = 1350, PAD = 96, maxW = W - PAD * 2;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  const ls = (lang === 'en') ? 3.4 : 1.5;
+
+  /* paper + inset hairline */
+  c.fillStyle = '#f7f4ef'; c.fillRect(0, 0, W, H);
+  c.strokeStyle = '#e2dbcf'; c.lineWidth = 2;
+  c.strokeRect(20, 20, W - 40, H - 40);
+
+  /* hammer mark, top right */
+  c.save();
+  c.translate(W - PAD - 78, 106);
+  c.fillStyle = '#a8542a'; c.fillRect(0, 0, 11, 36);
+  c.fillStyle = '#191713'; c.fillRect(11, 0, 24, 36);
+  c.fillStyle = '#4a443a'; c.fillRect(16, 31, 62, 11);
+  c.restore();
+
+  /* kicker */
+  c.font = '700 23px ' + F_SANS;
+  c.fillStyle = '#a8542a';
+  spacedText(c, t.docTitle.toUpperCase(), PAD, 132, ls);
+
+  c.strokeStyle = '#e2dbcf'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(PAD, 182); c.lineTo(W - PAD, 182); c.stroke();
+
+  /* "you finished as" */
+  c.font = '700 23px ' + F_SANS;
+  c.fillStyle = '#8c8478';
+  spacedText(c, u.finishedAs.toUpperCase(), PAD, 296, ls);
+
+  /* rank name, auto-fitted to the column */
+  const rank = t.ranks[rankIndex()];
+  let size = 138;
+  c.font = '700 ' + size + 'px ' + F_SERIF;
+  while (c.measureText(rank.name).width > maxW && size > 54) {
+    size -= 4;
+    c.font = '700 ' + size + 'px ' + F_SERIF;
+  }
+  c.fillStyle = '#191713';
+  c.fillText(rank.name, PAD, 458);
+
+  /* rank description — auto-fitted so it never exceeds four lines */
+  const DESC_TOP = 540, MAX_LINES = 4;
+  let dsz = 34, dl = [];
+  while (dsz >= 22) {
+    c.font = '400 ' + dsz + 'px ' + F_SERIF;
+    dl = wrapLines(c, rank.text, maxW);
+    if (dl.length <= MAX_LINES) break;
+    dsz -= 1;
+  }
+  if (dl.length > MAX_LINES) {
+    dl = dl.slice(0, MAX_LINES);
+    dl[MAX_LINES - 1] = dl[MAX_LINES - 1].replace(/\s*\S{0,3}$/, '') + '…';
+  }
+  c.font = '400 ' + dsz + 'px ' + F_SERIF;
+  c.fillStyle = '#4c463d';
+  const dlh = Math.round(dsz * 1.6);
+  dl.forEach(function (ln, i) { c.fillText(ln, PAD, DESC_TOP + i * dlh); });
+  const descEnd = DESC_TOP + (dl.length - 1) * dlh;
+
+  /* the four numbers, one inline line */
+  const line = [u.cash + ' ' + Math.round(state.cash),
+                u.standing + ' ' + Math.round(state.standing),
+                u.reach + ' ' + Math.round(state.reach),
+                u.time + ' ' + Math.round(state.time)].join('   ·   ');
+  let fs = 28;
+  c.font = '600 ' + fs + 'px ' + F_SANS;
+  while (c.measureText(line).width > maxW && fs > 17) {
+    fs -= 1;
+    c.font = '600 ' + fs + 'px ' + F_SANS;
+  }
+  c.fillStyle = '#4c463d';
+  c.fillText(line, PAD, descEnd + 56);
+
+  /* the question — the payload, anchored to the bottom */
+  const qPad = 56, qLh = 72;
+  c.font = '400 48px ' + F_SERIF;
+  const ql = wrapLines(c, t.end.q, maxW - qPad * 2);
+  const blockH = qPad * 2 + ql.length * qLh - 20;
+  const blockBottom = H - 132;
+  const blockTop = blockBottom - blockH;
+
+  c.strokeStyle = '#e2dbcf'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(PAD, blockTop - 66); c.lineTo(W - PAD, blockTop - 66); c.stroke();
+
+  roundRect(c, PAD, blockTop, maxW, blockH, 6);
+  c.fillStyle = '#191713'; c.fill();
+
+  c.fillStyle = '#f2ece2';
+  ql.forEach(function (ln, i) {
+    c.fillText(ln, PAD + qPad, blockTop + qPad + 42 + i * qLh);
+  });
+
+  /* footer */
+  c.font = '400 23px ' + F_SANS;
+  c.fillStyle = '#8c8478';
+  c.fillText(u.cardFooter, PAD, blockBottom + 68);
+
+  return cv;
+}
+
+function cardText() {
+  const u = U(), t = L();
+  const rank = t.ranks[rankIndex()];
+  return t.docTitle + '\n\n' +
+    u.finishedAs + ': ' + rank.name + '\n' + rank.text + '\n\n' +
+    u.cash + ' ' + Math.round(state.cash) + '  ·  ' +
+    u.standing + ' ' + Math.round(state.standing) + '  ·  ' +
+    u.reach + ' ' + Math.round(state.reach) + '  ·  ' +
+    u.time + ' ' + Math.round(state.time) + '\n\n' +
+    t.end.q;
+}
+
+function toast(msg) {
+  const old = document.getElementById('toast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'toast'; el.id = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.remove(); }, 2400);
+}
+
+function closeShare() {
+  const m = document.getElementById('shareModal');
+  if (m) m.remove();
+}
+
+function fallbackCopy(txt, u) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position = 'fixed'; ta.style.top = '-1000px';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  toast(ok ? u.copied : u.copyFail);
+}
+
+function openShare() {
+  const u = U();
+  const cv = buildCard();
+
+  const m = document.createElement('div');
+  m.className = 'modal open';
+  m.id = 'shareModal';
+  m.innerHTML =
+    '<div class="sheet">' +
+      '<h3>' + u.shareTitle + '</h3>' +
+      '<p class="sub">' + u.shareHint + '</p>' +
+      '<div class="cvwrap"></div>' +
+      '<div class="sheetacts">' +
+        '<button class="btn" id="dl">' + u.download + '</button>' +
+        '<button class="btn ghost" id="cp">' + u.copyText + '</button>' +
+        '<button class="btn ghost wide" id="cl">' + u.close + '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(m);
+  m.querySelector('.cvwrap').appendChild(cv);
+
+  m.onclick = function (e) { if (e.target === m) closeShare(); };
+  m.querySelector('#cl').onclick = closeShare;
+
+  m.querySelector('#dl').onclick = function () {
+    const t2 = L();
+    const slug = (lang === 'en')
+      ? t2.ranks[rankIndex()].name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      : 'rank-' + (rankIndex() + 1);
+    const fname = 'thor-hammer-' + slug + '.png';
+    const save = function (href, revoke) {
+      const a = document.createElement('a');
+      a.href = href; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      if (revoke) setTimeout(function () { URL.revokeObjectURL(href); }, 2000);
+    };
+    if (cv.toBlob) {
+      cv.toBlob(function (blob) { save(URL.createObjectURL(blob), true); }, 'image/png');
+    } else {
+      save(cv.toDataURL('image/png'), false);   /* very old browsers */
+    }
+  };
+
+  m.querySelector('#cp').onclick = function () {
+    const txt = cardText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(
+        function () { toast(u.copied); },
+        function () { fallbackCopy(txt, u); }
+      );
+    } else {
+      fallbackCopy(txt, u);
+    }
+  };
+
+  /* native share sheet, where the browser can share files */
+  if (navigator.canShare) {
+    cv.toBlob(function (blob) {
+      let file;
+      try { file = new File([blob], 'thor-hammer.png', { type: 'image/png' }); }
+      catch (e) { return; }
+      if (!navigator.canShare({ files: [file] })) return;
+      const b = document.createElement('button');
+      b.className = 'btn ghost'; b.id = 'sn';
+      b.textContent = u.shareNative;
+      b.onclick = function () {
+        navigator.share({ files: [file], text: cardText() }).catch(function () {});
+      };
+      const acts = m.querySelector('.sheetacts');
+      acts.insertBefore(b, acts.querySelector('#cl'));
+    }, 'image/png');
+  }
+}
+
+/* ---------------- KEYBOARD ---------------- */
+document.addEventListener('keydown', function (e) {
+  if (document.getElementById('shareModal')) {
+    if (e.key === 'Escape') closeShare();
+    return;
+  }
+  const opts = stage.querySelectorAll('.opt');
+  if (/^[1-9]$/.test(e.key) && opts.length) {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx < opts.length) { opts[idx].click(); return; }
+  }
+  if (e.key === 'Enter' || e.key === ' ') {
+    const btn = stage.querySelector('.acts .btn');
+    if (btn) { e.preventDefault(); btn.click(); }
+  }
+});
+
+/* ---------------- BOOT ---------------- */
+loadLang();
+resetState();
+render();
+</script>
+</body>
+</html>

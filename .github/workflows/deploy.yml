@@ -1,0 +1,58 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets are configured
+        run: |
+          missing=""
+          [ -n "${{ secrets.SSH_HOST }}" ]        || missing="$missing SSH_HOST"
+          [ -n "${{ secrets.SSH_USER }}" ]        || missing="$missing SSH_USER"
+          [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] || missing="$missing SSH_PRIVATE_KEY"
+          [ -n "${{ secrets.DEPLOY_PATH }}" ]     || missing="$missing DEPLOY_PATH"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "Add them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload site
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          tar czf - --exclude='.git' --exclude='.github' --exclude='deploy.sh' \
+                    --exclude='README.md' --exclude='.gitignore' --exclude='og.html' . \
+            | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o ConnectTimeout=20 \
+                  "$SSH_USER@$SSH_HOST" \
+                  "mkdir -p '$DEPLOY_PATH' && tar xzf - -C '$DEPLOY_PATH'"
+
+      - name: Verify it is being served
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$SSH_USER@$SSH_HOST" \
+            "ls -la '$DEPLOY_PATH'"
+          echo "✅ deployed to $DEPLOY_PATH"

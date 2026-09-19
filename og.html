@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>og.png generator — Everyone Got Thor's Hammer</title>
+<style>
+  body{margin:0;padding:32px 20px 60px;background:#f7f4ef;color:#191713;
+       font-family:"Segoe UI",-apple-system,"Microsoft YaHei","PingFang SC",Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-family:Georgia,serif;font-size:24px;margin:0 0 8px}
+  p{font-size:14px;color:#4c463d;margin:0 0 20px;max-width:62ch}
+  canvas{display:block;width:100%;height:auto;border:1px solid #e2dbcf;border-radius:3px;background:#fffdfa}
+  button{margin-top:20px;border:1px solid #191713;background:#191713;color:#fff;
+         font-family:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+         font-weight:700;padding:13px 26px;border-radius:2px;cursor:pointer}
+  button:hover{background:#000}
+  code{background:#ece5d9;padding:2px 6px;border-radius:2px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Social preview image</h1>
+  <p>This renders the 1200×630 card used for <code>og:image</code> / <code>twitter:image</code>.
+     Download it as <code>og.png</code>, put it next to <code>index.html</code>, commit, and then
+     point the two meta tags at the absolute URL.</p>
+  <canvas id="cv"></canvas>
+  <button id="dl">Download og.png</button>
+</div>
+
+<script>
+const W = 1200, H = 630, PAD = 72;
+const SERIF = 'Georgia, "Times New Roman", "Songti SC", "STSong", SimSun, "Noto Serif CJK SC", serif';
+const SANS  = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif';
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+function spaced(c, text, x, y, sp) {
+  let px = x;
+  for (const ch of text) { c.fillText(ch, px, y); px += c.measureText(ch).width + sp; }
+}
+
+const cv = document.getElementById('cv');
+cv.width = W; cv.height = H;
+const c = cv.getContext('2d');
+
+/* paper */
+c.fillStyle = '#f7f4ef'; c.fillRect(0, 0, W, H);
+c.strokeStyle = '#e2dbcf'; c.lineWidth = 2; c.strokeRect(16, 16, W - 32, H - 32);
+
+/* hammer mark, top right */
+c.save();
+c.translate(W - PAD - 92, 62); c.scale(1.15, 1.15);
+c.fillStyle = '#a8542a'; c.fillRect(0, 0, 11, 36);
+c.fillStyle = '#191713'; c.fillRect(11, 0, 24, 36);
+c.fillStyle = '#4a443a'; c.fillRect(16, 31, 62, 11);
+c.restore();
+
+/* kicker */
+c.font = '700 24px ' + SANS;
+c.fillStyle = '#a8542a';
+spaced(c, 'A SHORT GAME ABOUT THE PRICE OF SKILL', PAD, 88, 3.6);
+
+/* rule */
+c.strokeStyle = '#e2dbcf'; c.lineWidth = 2;
+c.beginPath(); c.moveTo(PAD, 126); c.lineTo(W - PAD, 126); c.stroke();
+
+/* title */
+c.font = '700 76px ' + SERIF;
+c.fillStyle = '#191713';
+c.fillText("Everyone Got Thor's Hammer", PAD, 244);
+
+/* subtitle */
+c.font = '400 33px ' + SERIF;
+c.fillStyle = '#4c463d';
+c.fillText('One morning, everyone on earth woke up holding it.', PAD, 312);
+
+/* question block, anchored to the bottom */
+const Q = "So: what is your hammer \u2014 and what does only your eye know?";
+const qPad = 46, qLh = 52;
+c.font = '400 34px ' + SERIF;
+const qw = c.measureText(Q).width;
+const inner = W - PAD * 2 - qPad * 2;
+const qLines = qw > inner ? [Q.slice(0, Math.ceil(Q.length * inner / qw)).trimEnd(), Q.slice(Math.ceil(Q.length * inner / qw)).trim()] : [Q];
+const blockH = qPad * 2 + qLines.length * qLh - 14;
+const blockBottom = H - 68;
+const blockTop = blockBottom - blockH;
+
+roundRect(c, PAD, blockTop, W - PAD * 2, blockH, 6);
+c.fillStyle = '#191713'; c.fill();
+
+c.fillStyle = '#f2ece2';
+qLines.forEach((ln, i) => c.fillText(ln, PAD + qPad, blockTop + qPad + 32 + i * qLh));
+
+document.getElementById('dl').onclick = () => {
+  cv.toBlob(b => {
+    const url = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'og.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }, 'image/png');
+};
+</script>
+</body>
+</html>
