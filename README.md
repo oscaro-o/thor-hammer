@@ -63,9 +63,11 @@ All serve the same file. Deploy with:
 | `index.html` | The entire game. This is the deployable artifact. |
 | `og.png` | 1200×630 social preview image. |
 | `og.html` | Browser tool that regenerates `og.png`. |
-| `tools/make-og.py` | Terminal version of the same thing (needs Pillow). |
 | `deploy.sh` | One-command deploy to the VPS. |
 | `.github/workflows/deploy.yml` | Auto-deploy on push to `main`. |
+| `tools/make-og.py` | Regenerate `og.png` from a terminal (needs Pillow). |
+| `tools/create-site.py` | Create a CyberPanel website from the CLI, working around the broken `cyberpanel` CLI. |
+| `tools/https-redirect.py` | Force HTTPS by editing the vhost config (`.htaccess` does not work on OpenLiteSpeed). |
 
 ## Deploying
 
@@ -121,6 +123,29 @@ So it is not "Hostinger *or* CyberPanel", it is **both, in that order**:
 > The CyberPanel **CLI is broken on this box** (`listWebsitesPretty` etc. return `0`,
 > `listUsers` returns an empty array even though 10 sites exist). Do not trust it.
 > Use the web UI, or call the internals directly — see `tools/create-site.py`.
+
+### The server runs OpenLiteSpeed, not LiteSpeed Enterprise
+
+This matters more than it sounds. `.htaccess` is an **Enterprise-only** feature.
+OpenLiteSpeed accepts the file, and the vhost even says `autoLoadHtaccess 1`, but it
+is silently ignored — so an `.htaccess` containing a redirect will do nothing and
+give you no error to explain why.
+
+Forcing HTTPS therefore means editing the vhost config:
+
+```bash
+ssh hetu '/usr/local/CyberCP/bin/python /tmp/https-redirect.py aihammer.trilumi.xyz'
+ssh hetu 'systemctl restart lshttpd'
+```
+
+See `tools/https-redirect.py`. The rule deliberately excludes `/.well-known/`,
+because Let's Encrypt renews over plain HTTP — redirecting that path would break
+renewal silently, about 60 days later.
+
+> Note that no other site on this server redirects HTTP to HTTPS. This one does.
+> If CyberPanel ever regenerates the vhost (changing PHP version, reissuing SSL,
+> saving rewrite rules in the UI), the rule is lost — re-run the script, or paste
+> the same rules into **Websites → &lt;domain&gt; → Rewrite Rules**.
 
 ## A note on the metaphor
 
