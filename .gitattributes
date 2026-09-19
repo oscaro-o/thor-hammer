@@ -1,0 +1,9 @@
+# Keep shell scripts LF-only so they run on Linux
+*.sh text eol=lf
+.github/workflows/*.yml text eol=lf
+
+# Normalise text, leave binaries alone
+* text=auto
+*.png binary
+*.jpg binary
+*.ico binary
