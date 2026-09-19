@@ -49,7 +49,7 @@ tar czf - "${FILES[@]}" | ssh -o ConnectTimeout=15 "$HOST_ALIAS" "
 # --- report the live URL ----------------------------------------------------
 DOMAIN=$(printf '%s' "$TARGET" | sed -nE 's#^/home/([^/]+)/public_html.*#\1#p')
 SUB=$(printf '%s' "$TARGET" | sed -nE 's#^/home/[^/]+/public_html/?(.*)$#\1#p')
-URL="https://${DOMAIN}/${SUB}/"
+if [ -n "$SUB" ]; then URL="https://${DOMAIN}/${SUB}/"; else URL="https://${DOMAIN}/"; fi
 
 echo
 echo "✓ deployed"

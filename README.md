@@ -41,14 +41,20 @@ It works offline. There is no analytics, no tracking, no external request of any
 
 ## Live
 
+**https://aihammer.trilumi.xyz/** ← the real address
+
 | Where | URL |
 |---|---|
+| **Production** | **https://aihammer.trilumi.xyz/** |
 | GitHub repo | https://github.com/oscaro-o/thor-hammer |
-| GitHub Pages (permanent backup) | https://oscaro-o.github.io/thor-hammer/ |
-| VPS (Trilumi server) | https://hetu.trilumi.xyz/hammer/ |
+| GitHub Pages (backup) | https://oscaro-o.github.io/thor-hammer/ |
+| Old sandbox path | https://hetu.trilumi.xyz/hammer/ |
 
-Both serve the same file. The Pages copy survives any server work; the VPS copy
-is the one to move to a proper subdomain later.
+All serve the same file. Deploy with:
+
+```bash
+./deploy.sh /home/aihammer.trilumi.xyz/public_html
+```
 
 ## Files
 
@@ -83,7 +89,7 @@ Add these four repository secrets (**Settings → Secrets and variables → Acti
 | `SSH_HOST` | `212.85.27.147` |
 | `SSH_USER` | `root` |
 | `SSH_PRIVATE_KEY` | contents of `~/.ssh/hetu_deploy` (the **private** key) |
-| `DEPLOY_PATH` | `/home/hetu.trilumi.xyz/public_html/hammer` |
+| `DEPLOY_PATH` | `/home/aihammer.trilumi.xyz/public_html` |
 
 Then every push to `main` deploys. You can also trigger it by hand from the Actions
 tab. The workflow fails loudly with a list of missing secrets if any are unset, so
@@ -93,17 +99,28 @@ it can never half-deploy.
 > workflow logs — but they *are* readable by anyone with admin rights on the repo.
 > If you'd rather not, use Option A and delete the workflow file.
 
-## Moving it to a proper domain
+## How this domain was set up
 
-`hetu.trilumi.xyz/hammer/` is a sandbox path, chosen because it touches nothing
-that already exists. When you want a real home:
+Worth knowing, because **two different panels are involved and they do different jobs**:
 
-1. CyberPanel → **Websites → Create Website**, domain e.g. `hammer.trilumi.xyz`
-2. Point the DNS A record at `212.85.27.147`
-3. CyberPanel → **SSL → Issue SSL**
-4. `./deploy.sh /home/hammer.trilumi.xyz/public_html`
-5. Update the `og:image` / `twitter:image` meta tags in `index.html` to the new
-   absolute URL, and the `DEPLOY_PATH` secret if you use Option B.
+| Panel | Controls | Why |
+|---|---|---|
+| **Hostinger hPanel** | **DNS** — which machine the name points at | `trilumi.xyz` uses `ns1/ns2.dns-parking.com`, i.e. Hostinger's DNS |
+| **CyberPanel** (on the server, port 8090) | **The web server** — what gets returned | creates the vhost + document root |
+
+So it is not "Hostinger *or* CyberPanel", it is **both, in that order**:
+
+1. **Hostinger** → Domains → `trilumi.xyz` → DNS Records → add `A` record
+   `aihammer` → `212.85.27.147`
+2. **CyberPanel** → create the website (creates `/home/aihammer.trilumi.xyz/public_html`)
+3. Issue SSL — needs DNS to resolve first
+
+> Do **not** add the DNS record inside CyberPanel. Its local PowerDNS is running but
+> it is not authoritative for `trilumi.xyz`, so records added there are never served.
+
+> The CyberPanel **CLI is broken on this box** (`listWebsitesPretty` etc. return `0`,
+> `listUsers` returns an empty array even though 10 sites exist). Do not trust it.
+> Use the web UI, or call the internals directly — see `tools/create-site.py`.
 
 ## A note on the metaphor
 
