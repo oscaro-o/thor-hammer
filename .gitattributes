@@ -2,8 +2,12 @@
 *.sh text eol=lf
 .github/workflows/*.yml text eol=lf
 
-# Normalise text, leave binaries alone
-* text=auto
+# Normalise text to LF and KEEP it LF in the working tree. `* text=auto`
+# on its own only normalises on commit — with PortableGit's system-level
+# `core.autocrlf=true`, the working tree still gets rewritten to CRLF on
+# every checkout, which is what made the deployed file larger than the
+# repo. eol=lf is the part that actually pins it.
+* text=auto eol=lf
 *.png binary
 *.jpg binary
 *.ico binary
